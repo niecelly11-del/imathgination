@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Login | iMATHgination</title>
+  <style>
+    body {
+      font-family: "Nunito", sans-serif;
+      background: #f7f9ef;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #loginBox {
+      background: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.15);
+      text-align: center;
+      width: 350px;
+    }
+    h2 { color: #4a6b16; margin-bottom: 20px; }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    button {
+      width: 100%;
+      background: #6b8e23;
+      color: white;
+      padding: 12px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover { background: #55741c; }
+  </style>
+</head>
+<body>
+
+  <div id="loginBox">
+    <h2>🎓 Student Login</h2>
+    <input type="text" id="studentNumber" placeholder="Student Number" />
+    <input type="password" id="studentPassword" placeholder="Password" />
+    <button id="loginBtn">Login</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyADVdmyzhrewkr2-AjV15NwdAqrfhw2TaY",
+      authDomain: "imathgination-7e610.firebaseapp.com",
+      projectId: "imathgination-7e610",
+      storageBucket: "imathgination-7e610.appspot.com",
+      messagingSenderId: "591589679937",
+      appId: "1:591589679937:web:5298f062812021e64c77c0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const loginBtn = document.getElementById("loginBtn");
+    const studentNumber = document.getElementById("studentNumber");
+    const studentPassword = document.getElementById("studentPassword");
+
+    loginBtn.addEventListener("click", async () => {
+      const number = studentNumber.value.trim();
+      const password = studentPassword.value.trim();
+
+      if (!number || !password) {
+        alert("Please enter both student number and password.");
+        return;
+      }
+
+      // ✅ Match role, number, and password
+      const q = query(
+        collection(db, "users"),
+        where("role", "==", "student"),
+        where("number", "==", number),
+        where("password", "==", password)
+      );
+
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) {
+        alert("Invalid student number or password.");
+        return;
+      }
+
+      const docSnap = snapshot.docs[0];
+      const data = docSnap.data();
+      const user = {
+        id: docSnap.id,
+        name: `${data.first} ${data.last}`,
+        number: data.number,
+        role: data.role,
+      };
+
+      localStorage.setItem("studentUser", JSON.stringify(user));
+      window.location.href = "index.html"; // 🎮 auto-enter game
+    });
+  </script>
+
+</body>
+</html>

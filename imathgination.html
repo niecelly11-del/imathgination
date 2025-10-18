@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iMATHgination Web Portal</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #6b8e23;       
+      --primary-dark: #4c6a1a;   
+      --bg: #dfe6cf;           
+      --bg-card: #b6c28f;      
+      --bg-frame: #8fa36b;       
+      --text: #2b2b2b;           
+      --error: #b94b4b;        
+      --success: #4e7b4b;       
+      --accent: #e6e3cc;       
+      --font-main: "Inter", sans-serif;
+      --font-soft: "Nunito", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-main);
+      line-height: 1.6;
+      letter-spacing: 0.2px;
+      border: 10px solid var(--bg-frame);
+      background-image: linear-gradient(to bottom, #e7edd5 0%, #dfe6cf 100%);
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.15);
+      flex: 1;
+    }
+
+    header {
+      background-color: var(--bg-card);
+      display: flex;
+      align-items: center;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      border-bottom: 2px solid var(--bg-frame);
+    }
+  
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 1.8rem;
+  background-color: var(--bg-card);
+  border-bottom: 2px solid var(--bg-frame);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.logo-right img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo img {
+      width: 60px;
+      height: 60px;
+    }
+
+    .logo h1 {
+      font-family: var(--font-soft);
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      letter-spacing: 0.3px;
+    }
+
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(to bottom, #dee6d1 0%, #d1dbb9 100%);
+      color: var(--primary-dark);
+      text-align: center;
+      padding: 4.5rem 2rem;
+      border-bottom-left-radius: 2rem;
+      border-bottom-right-radius: 2rem;
+    }
+
+    .hero h2 {
+      font-family: var(--font-soft);
+      font-size: 2.7rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      letter-spacing: 0.4px;
+    }
+
+    .roles {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2.5rem;
+      margin: 3.5rem 2rem;
+      flex: 1;
+    }
+
+    .role-card {
+      background: var(--accent);
+      border-radius: 1rem;
+      border: 1px solid var(--bg-frame);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      width: 290px;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .role-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .role-card img {
+      width: 85px;
+      margin-bottom: 1rem;
+    }
+
+    .role-card h3 {
+      font-family: var(--font-soft);
+      font-size: 1.35rem;
+      color: var(--primary-dark);
+      margin-bottom: 0.6rem;
+      font-weight: 700;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-content {
+      background: var(--accent);
+      border-radius: 1rem;
+      border: 1px solid var(--bg-frame);
+      padding: 2rem;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      animation: pop 0.3s ease forwards;
+    }
+
+    @keyframes pop {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-content h3 {
+      color: var(--primary-dark);
+      margin-bottom: 1.3rem;
+      font-family: var(--font-soft);
+      font-weight: 700;
+    }
+
+    .input-group {
+      text-align: left;
+      margin-bottom: 1rem;
+    }
+
+    .input-group label {
+      font-family: var(--font-main);
+      font-weight: 500;
+      display: block;
+      margin-bottom: 0.35rem;
+      color: #333;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      font-family: var(--font-main);
+    }
+
+    .input-group input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(107, 142, 35, 0.2);
+      outline: none;
+    }
+
+    .error {
+      color: var(--error);
+      font-size: 0.85rem;
+      margin-top: 0.3rem;
+      display: none;
+      font-family: var(--font-main);
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.85rem;
+      width: 100%;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+      font-family: var(--font-soft);
+      font-weight: 600;
+      margin-top: 0.3rem;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .link-btn {
+      background: none;
+      border: none;
+      color: var(--primary-dark);
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-decoration: underline;
+      margin-top: 0.75rem;
+      font-family: var(--font-soft);
+    }
+
+    .close-btn {
+      margin-top: 1.2rem;
+      background: transparent;
+      border: none;
+      color: var(--primary-dark);
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-soft);
+    }
+
+    .success-icon {
+      font-size: 3rem;
+      color: var(--success);
+      margin-bottom: 1rem;
+      animation: bounce 0.6s ease;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0; transform: scale(0.98); }
+    }
+
+    .fade-out {
+      animation: fadeOut 0.3s ease forwards;
+    }
+
+ 
+    footer {
+      background-color: var(--bg-card);
+      border-top: 2px solid var(--bg-frame);
+      color: #4c4c4c;
+      font-size: 0.9rem;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      margin-top: auto;
+      position: relative;
+    }
+
+    footer p {
+      margin: 0;
+      font-family: var(--font-soft);
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+  <div class="logo">
+    <img src="assets/LogoApp1.png" alt="Logo Left">
+    <h1>iMATHgination</h1>
+  </div>
+
+  <div class="logo-right">
+    <img src="assets/ProbexLogo.png" alt="Logo Right">
+  </div>
+</header>
+
+
+  <section class="hero">
+    <h2>Welcome to iMATHgination Portal</h2>
+  </section>
+
+  <section class="roles">
+    <div class="role-card" onclick="openModal('Admin')">
+      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Admin Icon">
+      <h3>IT Personnel Login</h3>
+    </div>
+
+    <div class="role-card" onclick="openModal('Teacher')">
+      <img src="https://cdn-icons-png.flaticon.com/512/1995/1995574.png" alt="Teacher Icon">
+      <h3>Teacher Login</h3>
+    </div>
+  </section>
+
+  
+  <footer>
+    <div class="footer-content">
+      <p>© 2025 iMATHgination — All rights reserved.</p>
+    </div>
+  </footer>
+
+
+  <div class="modal" id="loginModal">
+    <div class="modal-content" id="loginContent">
+      <h3 id="modalTitle">Login</h3>
+      <div class="input-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter your username">
+        <p class="error" id="usernameError">Invalid username</p>
+      </div>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password">
+        <p class="error" id="passwordError">Incorrect password</p>
+      </div>
+      <button class="btn" onclick="login()">Login</button>
+      <button class="link-btn" onclick="showForgotPassword()">Forgot Password?</button>
+      <button class="close-btn" onclick="closeModal()">Cancel</button>
+    </div>
+
+    <div class="modal-content" id="forgotContent" style="display:none;">
+      <h3>Verify Your Email</h3>
+      <div class="input-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="Enter your registered email">
+        <p class="error" id="emailError">Please enter a valid email address</p>
+      </div>
+      <button class="btn" onclick="sendVerification()">Send Verification Link</button>
+      <button class="close-btn" onclick="backToLogin()">← Back to Login</button>
+    </div>
+
+    <div class="modal-content" id="successContent" style="display:none;">
+      <div class="success-icon">✅</div>
+      <h3>Verification Sent!</h3>
+      <p>A verification link has been successfully sent to your email.</p>
+      <button class="btn" onclick="backToLogin()">Back to Login</button>
+    </div>
+  </div>
+
+  <!--<script src="role_data.js"></script> -->
+  <script>
+    const modal = document.getElementById("loginModal");
+    const loginContent = document.getElementById("loginContent");
+    const forgotContent = document.getElementById("forgotContent");
+    const successContent = document.getElementById("successContent");
+    const modalTitle = document.getElementById("modalTitle");
+    let selectedRole = "";
+
+    function openModal(role) {
+      selectedRole = role.toLowerCase();
+      modal.style.display = "flex";
+      modalTitle.textContent = `${role} Login`;
+      loginContent.style.display = "block";
+      forgotContent.style.display = "none";
+      successContent.style.display = "none";
+    }
+
+    function closeModal() {
+      modal.style.display = "none";
+    }
+
+    function showForgotPassword() {
+      loginContent.classList.add("fade-out");
+      setTimeout(() => {
+        loginContent.classList.remove("fade-out");
+        loginContent.style.display = "none";
+        forgotContent.style.display = "block";
+        forgotContent.style.animation = "fadeUp 0.4s ease forwards";
+      }, 300);
+    }
+
+    function backToLogin() {
+      const activeSection = forgotContent.style.display === "block" ? forgotContent : successContent;
+      activeSection.classList.add("fade-out");
+      setTimeout(() => {
+        activeSection.classList.remove("fade-out");
+        activeSection.style.display = "none";
+        loginContent.style.display = "block";
+        loginContent.style.animation = "fadeUp 0.4s ease forwards";
+        document.getElementById("username").focus();
+      }, 300);
+    }
+
+    window.onclick = (e) => { if (e.target == modal) closeModal(); };
+
+    document.addEventListener("keydown", function(event) {
+      if (event.key === "Enter" && modal.style.display === "flex") {
+        if (loginContent.style.display === "block") login();
+        else if (forgotContent.style.display === "block") sendVerification();
+        else if (successContent.style.display === "block") backToLogin();
+      }
+    });
+
+    function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const usernameError = document.getElementById("usernameError");
+      const passwordError = document.getElementById("passwordError");
+      const loginBtn = loginContent.querySelector(".btn");
+
+      usernameError.style.display = "none";
+      passwordError.style.display = "none";
+
+      if (!username || !password) {
+        if (!username) usernameError.style.display = "block";
+        if (!password) passwordError.style.display = "block";
+        return;
+      }
+
+      const originalText = loginBtn.textContent;
+      loginBtn.textContent = "Logging in...";
+      loginBtn.disabled = true;
+      loginBtn.style.opacity = "0.8";
+
+      // Firestore login for teachers
+      (async () => {
+        try {
+          // For teachers, username is their auto-generated ID number
+          const role = selectedRole;
+          const q = window.dbQueryTeachersLogin
+            ? window.dbQueryTeachersLogin(username, password)
+            : null;
+          let user = null;
+          if (role === "admin") {
+            // Hardcoded superadmin credentials
+            if (username === "niecelmendez11@gmail.com" && password === "Admin12345hehe") {
+              user = {
+                role: "admin",
+                username: "niecelmendez11@gmail.com",
+                password: "Admin12345hehe",
+                name: "Super Admin"
+              };
+            }
+          } else if (role === "teacher") {
+            // Query Firestore for teacher with matching number and password
+            const { getFirestore, collection, query, where, getDocs } = await import("https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js");
+            const db = getFirestore();
+            const q = query(collection(db, "users"), where("role", "==", "teacher"), where("number", "==", username), where("password", "==", password));
+            const snapshot = await getDocs(q);
+            if (!snapshot.empty) {
+              user = snapshot.docs[0].data();
+              user.id = snapshot.docs[0].id;
+            }
+          }
+         
+          if (!user) {
+            usernameError.style.display = "block";
+            passwordError.style.display = "block";
+            loginBtn.textContent = originalText;
+            loginBtn.disabled = false;
+            loginBtn.style.opacity = "1";
+            return;
+          }
+          localStorage.setItem("user", JSON.stringify(user));
+          localStorage.setItem("role", user.role);       // "teacher"
+          localStorage.setItem("teacherId", user.id);    // <-- IMPORTANT
+          localStorage.setItem("teacherNumber", user.number || "");
+          loginBtn.textContent = "Success! Redirecting...";
+          setTimeout(() => {
+            if (user.role === "admin") window.location.href = "admin.html";
+            else if (user.role === "teacher") window.location.href = "teacher.html";
+          }, 800);
+        } catch (e) {
+          usernameError.style.display = "block";
+          passwordError.style.display = "block";
+          loginBtn.textContent = originalText;
+          loginBtn.disabled = false;
+          loginBtn.style.opacity = "1";
+        }
+      })();
+    }
+
+    function sendVerification() {
+      const email = document.getElementById("email").value.trim();
+      const emailError = document.getElementById("emailError");
+      const verifyBtn = forgotContent.querySelector(".btn");
+
+      emailError.style.display = "none";
+
+      if (!email || !email.includes("@")) {
+        emailError.style.display = "block";
+        return;
+      }
+
+      const originalText = verifyBtn.textContent;
+      verifyBtn.textContent = "Sending...";
+      verifyBtn.disabled = true;
+      verifyBtn.style.opacity = "0.8";
+
+      setTimeout(() => {
+        verifyBtn.textContent = originalText;
+        verifyBtn.disabled = false;
+        verifyBtn.style.opacity = "1";
+        forgotContent.style.display = "none";
+        successContent.style.display = "block";
+        successContent.style.animation = "fadeUp 0.6s ease forwards";
+      }, 1200);
+    }
+  </script>
+</body>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyADVdmyzhrewkr2-AjV15NwdAqrfhw2TaY",
+    authDomain: "imathgination-7e610.firebaseapp.com",
+    projectId: "imathgination-7e610",
+    storageBucket: "imathgination-7e610.appspot.com",
+    messagingSenderId: "591589679937",
+    appId: "1:591589679937:web:5298f062812021e64c77c0",
+    measurementId: "G-NQBJ952VLG"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = getFirestore(app);
+
+  async function addData() {
+    try {
+      const docRef = await addDoc(collection(db, "yourCollectionName"), {
+        field1: "value1",
+        field2: "value2"
+      });
+      console.log("Document written with ID: ", docRef.id);
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    }
+  }
+  // Call addData() when needed
+</script>
+</html>

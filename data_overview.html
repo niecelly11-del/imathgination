@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Overview | iMATHgination</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #6b8e23;        
+      --primary-dark: #4c6a1a;   
+      --bg: #dfe6cf;             
+      --bg-card: #b6c28f;        
+      --bg-frame: #8fa36b;       
+      --text: #2b2b2b;           
+      --accent: #e6e3cc;         
+      --font-main: "Inter", sans-serif;
+      --font-soft: "Nunito", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg);
+      background-image: linear-gradient(to bottom, #e7edd5 0%, #dfe6cf 100%);
+      border: 10px solid var(--bg-frame);
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.15);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--bg-card);
+      color: var(--primary-dark);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--bg-frame);
+      border-radius: 0 0 14px 14px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    header h1 {
+      font-family: var(--font-soft);
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    header button {
+      background: var(--accent);
+      color: var(--primary-dark);
+      border: 1px solid var(--bg-frame);
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: var(--font-soft);
+      transition: all 0.2s ease;
+    }
+
+    header button:hover {
+      background: var(--primary-dark);
+      color: white;
+    }
+
+    main {
+      flex: 1;
+      padding: 40px;
+      text-align: center;
+    }
+
+    h2 {
+      font-family: var(--font-soft);
+      color: var(--primary-dark);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: var(--text);
+      margin-bottom: 40px;
+      font-family: var(--font-main);
+    }
+
+    .data-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+      justify-items: center;
+    }
+
+    .data-card {
+      background: var(--accent);
+      border: 1px solid var(--bg-frame);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .data-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+      border-color: var(--primary);
+    }
+
+    .data-card h3 {
+      color: var(--primary-dark);
+      font-family: var(--font-soft);
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+
+    .data-card p {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 6px;
+    }
+
+    .data-card small {
+      color: #3d3d3d;
+      font-size: 0.85rem;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.9rem;
+      padding: 0.5rem 0;
+      color: #4c4c4c;
+      background-color: var(--bg-card);
+      border-top: 2px solid var(--bg-frame);
+      font-family: var(--font-soft);
+      margin-top: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Data Overview</h1>
+    <button onclick="goBack()">← Back to Dashboard</button>
+  </header>
+
+  <main>
+    <h2>System Data Analytics</h2>
+    <p>Overview of usage statistics, performance metrics, and system reports.</p>
+
+    <div class="data-container">
+      <div class="data-card">
+        <h3>Total Users</h3>
+        <p id="totalUsers">128</p>
+        <small>Active across all portals</small>
+      </div>
+
+      <div class="data-card">
+        <h3>Active Teachers</h3>
+        <p id="activeTeachers">34</p>
+        <small>Currently managing classes</small>
+      </div>
+
+      <div class="data-card">
+        <h3>Active Students</h3>
+        <p id="activeStudents">94</p>
+        <small>Engaged in ongoing lessons</small>
+      </div>
+
+      <div class="data-card">
+        <h3>Assessments Taken</h3>
+        <p id="assessments">412</p>
+        <small>Submitted through all modules</small>
+      </div>
+
+      <div class="data-card">
+        <h3>Average Performance</h3>
+        <p id="avgPerformance">87%</p>
+        <small>Based on recent assessments</small>
+      </div>
+
+      <div class="data-card">
+        <h3>System Uptime</h3>
+        <p id="uptime">99.9%</p>
+        <small>Last 30 days</small>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2025 iMATHgination — Admin Portal</p>
+  </footer>
+
+  <script>
+    function goBack() {
+      window.location.href = "admin.html";
+    }
+  </script>
+</body>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyADVdmyzhrewkr2-AjV15NwdAqrfhw2TaY",
+    authDomain: "imathgination-7e610.firebaseapp.com",
+    projectId: "imathgination-7e610",
+    storageBucket: "imathgination-7e610.appspot.com",
+    messagingSenderId: "591589679937",
+    appId: "1:591589679937:web:5298f062812021e64c77c0",
+    measurementId: "G-NQBJ952VLG"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = getFirestore(app);
+
+  async function addData() {
+    try {
+      const docRef = await addDoc(collection(db, "yourCollectionName"), {
+        field1: "value1",
+        field2: "value2"
+      });
+      console.log("Document written with ID: ", docRef.id);
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    }
+  }
+  // Call addData() when needed
+</script>
+</html>

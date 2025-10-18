@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Management | iMATHgination Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #6b8e23;
+      --primary-dark: #4c6a1a;
+      --bg: #dfe6cf;
+      --bg-card: #b6c28f;
+      --bg-frame: #8fa36b;
+      --text: #2b2b2b;
+      --accent: #e6e3cc;
+      --error: #b94b4b;
+      --warn: #d6a542;
+      --success: #4e7b4b;
+      --font-main: "Inter", sans-serif;
+      --font-soft: "Nunito", sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; display: flex; flex-direction: column; }
+
+    body {
+      font-family: var(--font-main);
+      background: linear-gradient(to bottom, #e7edd5, #dfe6cf);
+      border: 10px solid var(--bg-frame);
+      color: var(--text);
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.15);
+      flex: 1;
+    }
+
+    header {
+      background: var(--bg-card);
+      color: var(--primary-dark);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--bg-frame);
+      border-radius: 0 0 14px 14px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    header button {
+      background: var(--accent);
+      color: var(--primary-dark);
+      border: 1px solid var(--bg-frame);
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      font-family: var(--font-soft);
+    }
+
+    header button:hover { background: var(--primary-dark); color: white; }
+    main { padding: 40px; flex: 1; }
+
+    h2 {
+      color: var(--primary-dark);
+      font-family: var(--font-soft);
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .role-buttons {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      justify-content: center;
+    }
+
+    .role-buttons button {
+      background: var(--accent);
+      color: var(--primary-dark);
+      border: 1px solid var(--bg-frame);
+      border-radius: 20px;
+      padding: 8px 20px;
+      cursor: pointer;
+      font-family: var(--font-soft);
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .role-buttons button.active { background: var(--primary-dark); color: white; }
+
+    .add-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 15px;
+      font-family: var(--font-soft);
+      transition: background 0.2s ease;
+    }
+    .add-btn:hover { background: var(--primary-dark); }
+
+    .table-container {
+      background: var(--accent);
+      border-radius: 16px;
+      border: 1px solid var(--bg-frame);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid #ccc;
+    }
+
+    th { color: var(--primary-dark); font-weight: 700; }
+
+    td button {
+      font-size: 0.85rem;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-right: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .edit-btn { background: var(--primary-dark); color: white; }
+    .deactivate-btn { background: var(--warn); color: #2b2b2b; }
+    .delete-btn { background: var(--error); color: white; }
+
+    .edit-btn:hover { background: #567e1a; }
+    .deactivate-btn:hover { background: #c7952d; }
+    .delete-btn:hover { background: #a83f3f; }
+
+    /* ========== MODALS ========== */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.3);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal.show { display: flex !important; }
+
+    .modal form {
+      background: #fffef9;
+      border: 2px solid var(--bg-frame);
+      border-radius: 16px;
+      padding: 28px 24px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+      width: 360px;
+      animation: fadeIn 0.25s ease-out;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal h3 {
+      text-align: center;
+      font-family: var(--font-soft);
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      font-size: 0.9rem;
+      color: var(--primary-dark);
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .form-group input {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      font-family: var(--font-main);
+    }
+
+    .form-group input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 4px var(--primary);
+      outline: none;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .cancel-btn, .save-btn {
+      font-family: var(--font-soft);
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .cancel-btn { background: #cfcfcf; color: #2b2b2b; }
+    .cancel-btn:hover { background: #b2b2b2; }
+    .save-btn { background: var(--primary-dark); color: white; }
+    .save-btn:hover { background: var(--primary); }
+
+    @keyframes fadeIn {
+      from { transform: translateY(-10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* 🔔 Toast Notification Styles */
+    .toast-container {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 2000;
+    }
+    .toast {
+      background: var(--primary-dark);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      font-family: var(--font-soft);
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeInOut 3s ease forwards;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(20px); }
+      10%, 90% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.9rem;
+      padding: 1rem;
+      color: #4c4c4c;
+      background: var(--bg-card);
+      border-top: 2px solid var(--bg-frame);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Manage User Credentials</h1>
+    <button onclick="window.location.href='admin.html'">← Back to Dashboard</button>
+  </header>
+
+  <main>
+    <h2>Account Monitoring</h2>
+
+    <div class="role-buttons">
+      <button id="studentBtn" class="active">Students</button>
+      <button id="teacherBtn">Teachers</button>
+    </div>
+
+    <button class="add-btn" onclick="showAddUserForm()">+ Add User</button>
+
+    <!-- 🔹 Add User Modal -->
+    <div id="addUserModal" class="modal">
+      <form id="addUserForm">
+        <h3>Add User</h3>
+        <div class="form-group"><label>Last Name</label><input name="last" required /></div>
+        <div class="form-group"><label>First Name</label><input name="first" required /></div>
+        <div class="form-group"><label>M.I.</label><input name="mi" /></div>
+        <div class="form-group"><label>Section</label><input name="section" /></div>
+        <div class="form-group"><label>Email (Teachers Only)</label><input name="email" /></div>
+        <div class="form-group"><label>Subject (Teachers Only)</label><input name="subject" /></div>
+        <div class="form-actions">
+          <button type="button" class="cancel-btn" onclick="hideAddUserForm()">Cancel</button>
+          <button type="submit" class="save-btn">Add User</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 🔹 Edit User Modal -->
+    <div id="editUserModal" class="modal">
+      <form id="editUserForm">
+        <h3>Edit User Details</h3>
+        <div class="form-group"><label>Last Name</label><input name="last" required /></div>
+        <div class="form-group"><label>First Name</label><input name="first" required /></div>
+        <div class="form-group"><label>M.I.</label><input name="mi" /></div>
+        <div class="form-group"><label>Section</label><input name="section" /></div>
+        <div class="form-actions">
+          <button type="button" id="cancelEditBtn" class="cancel-btn">Cancel</button>
+          <button type="submit" class="save-btn">Save Changes</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="table-container">
+      <table id="userTable">
+        <thead><tr></tr></thead>
+        <tbody id="userTableBody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer><p>© 2025 iMATHgination — Admin Portal</p></footer>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyADVdmyzhrewkr2-AjV15NwdAqrfhw2TaY",
+      authDomain: "imathgination-7e610.firebaseapp.com",
+      projectId: "imathgination-7e610",
+      storageBucket: "imathgination-7e610.appspot.com",
+      messagingSenderId: "591589679937",
+      appId: "1:591589679937:web:5298f062812021e64c77c0",
+      measurementId: "G-NQBJ952VLG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    let currentRole = "student";
+    let currentEditId = null;
+
+    const showToast = (msg, type="success") => {
+      const container = document.getElementById("toastContainer");
+      const t = document.createElement("div");
+      t.className = "toast";
+      t.style.background =
+        type === "error" ? "var(--error)" :
+        type === "warn" ? "var(--warn)" :
+        "var(--success)";
+      t.textContent = msg;
+      container.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    };
+
+    // Role buttons
+    const studentBtn = document.getElementById("studentBtn");
+    const teacherBtn = document.getElementById("teacherBtn");
+    studentBtn.onclick = () => { currentRole = "student"; toggleRoleButtons(); renderTableHeader(); fetchAndRenderUsers(); };
+    teacherBtn.onclick = () => { currentRole = "teacher"; toggleRoleButtons(); renderTableHeader(); fetchAndRenderUsers(); };
+
+    function toggleRoleButtons() {
+      studentBtn.classList.toggle("active", currentRole === "student");
+      teacherBtn.classList.toggle("active", currentRole === "teacher");
+    }
+
+    // Modal helpers
+    const showAddUserForm = () => document.getElementById("addUserModal").classList.add("show");
+    const hideAddUserForm = () => document.getElementById("addUserModal").classList.remove("show");
+    const showEditUserForm = () => document.getElementById("editUserModal").classList.add("show");
+    const hideEditUserForm = () => document.getElementById("editUserModal").classList.remove("show");
+
+    // Expose for button onclick
+    window.showAddUserForm = showAddUserForm;
+    window.hideAddUserForm = hideAddUserForm;
+
+    // Close modals on backdrop click or Esc
+    document.getElementById("addUserModal").addEventListener("click", (e) => {
+      if (e.target.id === "addUserModal") hideAddUserForm();
+    });
+    document.getElementById("editUserModal").addEventListener("click", (e) => {
+      if (e.target.id === "editUserModal") hideEditUserForm();
+    });
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { hideAddUserForm(); hideEditUserForm(); }
+    });
+
+    // Cancel edit
+    document.getElementById("cancelEditBtn").onclick = () => hideEditUserForm();
+
+    // Dynamic header
+    function renderTableHeader() {
+      const thead = document.querySelector("#userTable thead tr");
+      thead.innerHTML =
+        currentRole === "teacher"
+          ? `<th>Last Name</th><th>First Name</th><th>M.I.</th><th>Email</th><th>Subject</th><th>Section</th><th>ID</th><th>Password</th><th>Status</th><th>Actions</th>`
+          : `<th>Last Name</th><th>First Name</th><th>M.I.</th><th>Section</th><th>ID</th><th>Password</th><th>Status</th><th>Actions</th>`;
+    }
+
+    // Add user
+    document.getElementById("addUserForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const newUser = {
+        last: f.last.value.trim(),
+        first: f.first.value.trim(),
+        mi: f.mi.value.trim(),
+        section: f.section.value.trim(),
+        email: f.email.value?.trim() || "",
+        subject: f.subject.value?.trim() || "",
+        number: (currentRole === "student" ? "S" : "T") + Math.floor(100000 + Math.random() * 900000),
+        password: Math.random().toString(36).slice(-8),
+        active: true,
+        role: currentRole
+      };
+      try {
+        await addDoc(collection(db, "users"), newUser);
+        showToast("✅ User added successfully!");
+        f.reset();
+        hideAddUserForm();
+        fetchAndRenderUsers();
+      } catch (err) {
+        console.error(err);
+        showToast("Failed to add user.", "error");
+      }
+    };
+
+    // Fetch & render
+    async function fetchAndRenderUsers() {
+      const tbody = document.getElementById("userTableBody");
+      tbody.innerHTML = "<tr><td colspan='10'>Loading...</td></tr>";
+      try {
+        const qy = query(collection(db, "users"), where("role", "==", currentRole));
+        const snap = await getDocs(qy);
+        tbody.innerHTML = "";
+        snap.forEach((docSnap) => {
+          const u = docSnap.data();
+          const row = document.createElement("tr");
+          row.innerHTML =
+            currentRole === "teacher"
+              ? `
+                <td>${u.last}</td>
+                <td>${u.first}</td>
+                <td>${u.mi || ""}</td>
+                <td>${u.email || ""}</td>
+                <td>${u.subject || ""}</td>
+                <td>${u.section || ""}</td>
+                <td>${u.number}</td>
+                <td>${u.password}</td>
+                <td>${u.active ? "Active" : "Inactive"}</td>
+                <td>
+                  <button class="edit-btn" onclick="editUser('${docSnap.id}')">Edit</button>
+                  <button class="deactivate-btn" onclick="toggleStatus('${docSnap.id}', ${!u.active})">${u.active ? "Deactivate" : "Activate"}</button>
+                  <button class="delete-btn" onclick="deleteUser('${docSnap.id}')">Delete</button>
+                </td>`
+              : `
+                <td>${u.last}</td>
+                <td>${u.first}</td>
+                <td>${u.mi || ""}</td>
+                <td>${u.section || ""}</td>
+                <td>${u.number}</td>
+                <td>${u.password}</td>
+                <td>${u.active ? "Active" : "Inactive"}</td>
+                <td>
+                  <button class="edit-btn" onclick="editUser('${docSnap.id}')">Edit</button>
+                  <button class="deactivate-btn" onclick="toggleStatus('${docSnap.id}', ${!u.active})">${u.active ? "Deactivate" : "Activate"}</button>
+                  <button class="delete-btn" onclick="deleteUser('${docSnap.id}')">Delete</button>
+                </td>`;
+          tbody.appendChild(row);
+        });
+        if (!tbody.children.length) {
+          tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:16px;">No users found.</td></tr>`;
+        }
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="10" style="color:var(--error);">Failed to load users.</td></tr>`;
+      }
+    }
+
+    // Toggle active
+    window.toggleStatus = async (id, newStatus) => {
+      try {
+        await updateDoc(doc(db, "users", id), { active: newStatus });
+        showToast(newStatus ? "Account activated." : "Account deactivated.", "warn");
+        fetchAndRenderUsers();
+      } catch (err) {
+        console.error(err);
+        showToast("Failed to update status.", "error");
+      }
+    };
+
+    // Delete
+    window.deleteUser = async (id) => {
+      if (!confirm("Delete this user?")) return;
+      try {
+        await deleteDoc(doc(db, "users", id));
+        showToast("User deleted.", "warn");
+        fetchAndRenderUsers();
+      } catch (err) {
+        console.error(err);
+        showToast("Failed to delete user.", "error");
+      }
+    };
+
+    // Edit flow
+    window.editUser = async (id) => {
+      try {
+        const docRef = doc(db, "users", id);
+        const snap = await getDoc(docRef);
+        if (!snap.exists()) return showToast("User not found.", "error");
+        const u = snap.data();
+        currentEditId = id;
+
+        const f = document.getElementById("editUserForm");
+        f.last.value = u.last || "";
+        f.first.value = u.first || "";
+        f.mi.value = u.mi || "";
+        f.section.value = u.section || "";
+        showEditUserForm();
+      } catch (err) {
+        console.error(err);
+        showToast("Failed to load user.", "error");
+      }
+    };
+
+    document.getElementById("editUserForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const updates = {
+        last: f.last.value.trim(),
+        first: f.first.value.trim(),
+        mi: f.mi.value.trim(),
+        section: f.section.value.trim(),
+      };
+      try {
+        await updateDoc(doc(db, "users", currentEditId), updates);
+        showToast("User info updated!");
+        hideEditUserForm();
+        fetchAndRenderUsers();
+      } catch (err) {
+        console.error(err);
+        showToast("Failed to update user.", "error");
+      }
+    };
+
+    // Initial load
+    renderTableHeader();
+    fetchAndRenderUsers();
+  </script>
+</body>
+</html>

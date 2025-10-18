@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Reports | iMATHgination</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #6b8e23;        
+      --primary-dark: #4c6a1a;   
+      --bg: #dfe6cf;            
+      --bg-card: #b6c28f;        
+      --bg-frame: #8fa36b;    
+      --text: #2b2b2b;         
+      --accent: #e6e3cc;        
+      --font-main: "Inter", sans-serif;
+      --font-soft: "Nunito", sans-serif;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      border: 10px solid var(--bg-frame);
+      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.15);
+      background-image: linear-gradient(to bottom, #e7edd5 0%, #dfe6cf 100%);
+      background-attachment: fixed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 97.4vh;
+    }
+
+    header {
+      background: var(--bg-card);
+      color: var(--primary-dark);
+      padding: 20px 245.9px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      width: 100%;
+      max-width: 1000px;
+      border-bottom: 2px solid var(--bg-frame);
+      border-radius: 0 0 14px 14px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.6rem;
+      font-family: var(--font-soft);
+      font-weight: 700;
+      text-align: center;
+      flex-grow: 1;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 15px;
+      right: 25px;
+      background: var(--accent);
+      color: var(--primary-dark);
+      border: 1px solid var(--bg-frame);
+      padding: 8px 18px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: var(--font-soft);
+      transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+      background: var(--primary-dark);
+      color: #fff;
+    }
+
+    main {
+      flex: 1;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    h2 {
+      color: var(--primary-dark);
+      font-family: var(--font-soft);
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    p {
+      color: #3d3d3d;
+      font-size: 0.95rem;
+      margin-bottom: 25px;
+      text-align: center;
+      max-width: 700px;
+    }
+
+    .topic-buttons, .section-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .topic-btn, .section-btn {
+      background: var(--accent);
+      border: 1px solid var(--bg-frame);
+      border-radius: 14px;
+      padding: 10px 20px;
+      font-family: var(--font-soft);
+      font-weight: 600;
+      color: var(--primary-dark);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .topic-btn.active, .section-btn.active {
+      background: var(--primary-dark);
+      color: #fff;
+    }
+
+    .filter-label {
+      text-align: center;
+      font-family: var(--font-soft);
+      color: var(--primary-dark);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .table-card {
+      background: var(--accent);
+      border: 1px solid var(--bg-frame);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 750px;
+      text-align: center;
+    }
+
+    .table-card h3 {
+      color: var(--primary-dark);
+      font-family: var(--font-soft);
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-soft);
+      font-size: 0.95rem;
+      margin: 0 auto;
+    }
+
+    th, td {
+      border-bottom: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--bg-card);
+      color: var(--primary-dark);
+    }
+
+    tr:hover {
+      background-color: #f4f4f4;
+    }
+
+    .subtable {
+      margin-top: 25px;
+    }
+
+    .subtable h4 {
+      color: var(--primary-dark);
+      margin-bottom: 8px;
+      font-family: var(--font-soft);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Data Reports</h1>
+    <button class="back-btn" onclick="goBack()">Back to Dashboard</button>
+  </header>
+
+  <main>
+    <h2>Student Performance</h2>
+    <p>Select a topic and section to view student scores and difficult items.</p>
+
+    <!-- Topic Buttons -->
+    <div class="topic-buttons">
+      <button class="topic-btn active" onclick="showTopic('TimeWorldZones')">Time and World Zones</button>
+      <button class="topic-btn" onclick="showTopic('operations')">GMDAS Operations</button>
+      <button class="topic-btn" onclick="showTopic('fractions')">Multiplying Fractions</button>
+      <button class="topic-btn" onclick="showTopic('ShapesArea')">Area of Shapes</button>
+    </div>
+
+    <!-- Section Filter Label -->
+    <div class="filter-label">Section:</div>
+
+    <!-- Section Filter Buttons -->
+    <div class="section-buttons">
+      <!--<button class="section-btn active" onclick="filterSection('All')">All</button>-->
+      <button class="section-btn" onclick="filterSection('7-A')">7-A</button>
+      <button class="section-btn" onclick="filterSection('7-B')">7-B</button>
+      <button class="section-btn" onclick="filterSection('7-C')">7-C</button>
+    </div>
+
+    <div class="table-card">
+      <h3>Recent Scores</h3>
+      <table id="scoresTable">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Section</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="subtable">
+        <h4>Most Difficult Items</h4>
+        <table id="difficultTable">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Topic</th>
+              <th>Number of Students</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function goBack() {
+      window.location.href = "teacher.html";
+    }
+
+    const topicData = {
+      TimeWorldZones: {
+        scores: [
+          ["Alice Reyes", "7-A", 92],
+          ["Ben Cruz", "7-B", 85],
+          ["Cara Lim", "7-A", 78],
+          ["David Lee", "7-C", 95]
+        ],
+        difficult: [
+          ["Item #5", "Simplifying Fractions", 12],
+          ["Item #7", "Mixed Numbers", 10]
+        ]
+      },
+      operations: {
+        scores: [
+          ["Ella Tan", "7-A", 80],
+          ["Frank Yu", "7-B", 88],
+          ["Gina Cruz", "7-C", 91]
+        ],
+        difficult: [
+          ["Item #4", "Decimal Comparison", 9],
+          ["Item #9", "Place Value", 7]
+        ]
+      },
+      fractions: {
+        scores: [
+          ["Henry Lim", "7-A", 86],
+          ["Ivy Santos", "7-B", 90],
+          ["Jake Ramos", "7-C", 83]
+        ],
+        difficult: [
+          ["Item #3", "Angles", 11],
+          ["Item #8", "Shapes Identification", 8]
+        ]
+      },
+      ShapesArea: {
+        scores: [
+          ["Kate Dela Cruz", "7-A", 82],
+          ["Leo Gomez", "7-B", 79],
+          ["Mia Chua", "7-C", 88]
+        ],
+        difficult: [
+          ["Item #6", "Addition Problems", 10],
+          ["Item #10", "Subtraction Context", 9]
+        ]
+      }
+    };
+
+    let currentTopic = "TimeWorldZones";
+    let currentSection = "All";
+
+    function showTopic(topic) {
+      currentTopic = topic;
+      document.querySelectorAll(".topic-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelector(`[onclick="showTopic('${topic}')"]`).classList.add("active");
+      updateTables();
+    }
+
+    function filterSection(section) {
+      currentSection = section;
+      document.querySelectorAll(".section-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelector(`[onclick="filterSection('${section}')"]`).classList.add("active");
+      updateTables();
+    }
+
+    function updateTables() {
+      const topicInfo = topicData[currentTopic];
+      const scoresBody = document.querySelector("#scoresTable tbody");
+      const diffBody = document.querySelector("#difficultTable tbody");
+
+      // Filter scores by section
+      const filteredScores = currentSection === "All"
+        ? topicInfo.scores
+        : topicInfo.scores.filter(row => row[1] === currentSection);
+
+      scoresBody.innerHTML = filteredScores
+        .map(row => `<tr>${row.map(col => `<td>${col}</td>`).join("")}</tr>`)
+        .join("");
+
+      diffBody.innerHTML = topicInfo.difficult
+        .map(row => `<tr>${row.map(col => `<td>${col}</td>`).join("")}</tr>`)
+        .join("");
+    }
+
+    // Initialize default view
+    updateTables();
+  </script>
+</body>
+</html>

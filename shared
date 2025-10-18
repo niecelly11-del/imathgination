@@ -1,0 +1,42 @@
+/*function loadModules(role) {
+  const container = document.getElementById("modules");
+  const accessible = ROLE_ACCESS[role];
+  container.innerHTML = "";
+
+  const allModules = [
+    "Login Page",
+    "User Management Module",
+    "System Settings",
+    "Website Management Dashboard",
+    "Enrollment Page",
+    "Data Reports Module",
+    "Assessment Customization Module",
+    "Teacher Dashboard",
+    "View Progress Tracker"
+  ];
+
+  allModules.forEach(module => {
+    const div = document.createElement("div");
+    div.className = "module-card";
+    div.textContent = module;
+    if (!accessible.includes(module)) div.classList.add("restricted");
+    container.appendChild(div);
+  });
+}
+
+function logout() {
+  localStorage.removeItem("user");
+  window.location.href = "imathgination.html";
+}
+
+function checkAccess(expectedRole) {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (!user || user.role !== expectedRole) {
+    alert("Access Denied");
+    window.location.href = "imathgination.html";
+  } else {
+    document.getElementById("welcome").textContent = `Welcome, ${user.username.toUpperCase()} (${user.role.toUpperCase()})`;
+    loadModules(user.role);
+  }
+}
+*/

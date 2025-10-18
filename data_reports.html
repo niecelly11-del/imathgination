@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Reports | iMATHgination</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6b8e23;
+      --primary-dark: #4c6a1a;
+      --bg: #dfe6cf;
+      --bg-card: #b6c28f;
+      --bg-frame: #8fa36b;
+      --text: #2b2b2b;
+      --accent: #e6e3cc;
+      --font-main: "Inter", sans-serif;
+      --font-soft: "Nunito", sans-serif;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      border: 10px solid var(--bg-frame);
+      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.15);
+      background-image: linear-gradient(to bottom, #e7edd5 0%, #dfe6cf 100%);
+      background-attachment: fixed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 97.4vh;
+    }
+
+    header {
+      background: var(--bg-card);
+      color: var(--primary-dark);
+      padding: 20px 245.9px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      width: 100%;
+      max-width: 1000px;
+      border-bottom: 2px solid var(--bg-frame);
+      border-radius: 0 0 14px 14px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.6rem;
+      font-family: var(--font-soft);
+      font-weight: 700;
+      text-align: center;
+      flex-grow: 1;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 15px;
+      right: 25px;
+      background: var(--accent);
+      color: var(--primary-dark);
+      border: 1px solid var(--bg-frame);
+      padding: 8px 18px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: var(--font-soft);
+      transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+      background: var(--primary-dark);
+      color: #fff;
+    }
+
+    /* Modal styling (minimal) */
+    .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+    .modal-content { background: var(--accent); padding: 20px; border-radius: 12px; width: 90%; max-width: 900px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+
+    main {
+      flex: 1;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    h2 {
+      color: var(--primary-dark);
+      font-family: var(--font-soft);
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    p {
+      color: #3d3d3d;
+      font-size: 0.95rem;
+      margin-bottom: 25px;
+      text-align: center;
+      max-width: 700px;
+    }
+
+    .filter-label {
+      text-align: center;
+      font-family: var(--font-soft);
+      color: var(--primary-dark);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .section-buttons, .tab-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .section-btn, .tab-btn {
+      background: transparent;
+      border: 1.5px solid rgba(76,106,26,0.25);
+      border-radius: 999px;
+      padding: 10px 22px;
+      font-family: var(--font-soft);
+      font-weight: 700;
+      color: var(--primary-dark);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      box-shadow: none;
+    }
+
+    .section-btn.active, .tab-btn.active {
+      background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 4px 8px rgba(76,106,26,0.12);
+    }
+
+    /* topic tabs container used in Wrong Answers modal */
+    #wrongTopicTabs {
+      display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+    }
+
+    /* ✨ Compact Search Bar */
+    .search-box {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto 25px auto;
+    }
+
+    .search-box input {
+      width: 100%;
+      height: 38px;
+      border-radius: 14px;
+      border: 2px solid var(--bg-frame);
+      background-color: var(--accent);
+      font-family: var(--font-soft);
+      font-size: 0.9rem;
+      color: var(--primary-dark);
+      padding: 0 38px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .search-box input::placeholder {
+      color: #6c7a4a;
+    }
+
+    .search-box input:focus {
+      border-color: var(--primary-dark);
+      box-shadow: 0 0 0 3px rgba(107,142,35,0.2);
+    }
+
+    .search-box::before {
+      content: "🔍";
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      color: var(--primary-dark);
+      opacity: 0.8;
+    }
+
+    .table-card {
+      background: var(--accent);
+      border: 1px solid var(--bg-frame);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 750px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-soft);
+      font-size: 0.95rem;
+      margin: 0 auto;
+    }
+
+    th, td {
+      border-bottom: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--bg-card);
+      color: var(--primary-dark);
+    }
+
+    tr:hover {
+      background-color: #f4f4f4;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease-in; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Data Reports</h1>
+    <div style="display:flex; gap:10px;">
+      <button id="analyticsBtn">Analytics</button>
+      <button id="wrongBtn">Wrong Answers</button>
+    </div>
+    <button id="backBtn" class="back-btn">Back to Dashboard</button>
+  </header>
+  <main>
+    <h2>Student Performance</h2>
+    <p>Select a topic tab and use the section filter or search to view student scores.</p>
+
+    <!-- Dashboard cards moved into Analytics modal to keep the main page focused -->
+
+    <div class="filter-label">Section:</div>
+    <div class="section-buttons" id="sectionButtons"></div>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search student name...">
+    </div>
+
+    <div class="tab-buttons" id="topicTabs"></div>
+    <div id="tabContents"></div>
+  </main>
+
+  <script type="module">
+    // Chart.js
+    import "https://cdn.jsdelivr.net/npm/chart.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+  import { getFirestore, collection, query, where, onSnapshot, getDocs, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyADVdmyzhrewkr2-AjV15NwdAqrfhw2TaY",
+      authDomain: "imathgination-7e610.firebaseapp.com",
+      projectId: "imathgination-7e610",
+      storageBucket: "imathgination-7e610.appspot.com",
+      messagingSenderId: "591589679937",
+      appId: "1:591589679937:web:5298f062812021e64c77c0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const topics = {
+      timelessVillage: "Time and World Zones (Timeless Village)",
+      gmdasOperations: "GMDAS Operations (Operation Forest)",
+      multiplyingFractions: "Multiplying Fractions (Fraction River)",
+      areaOfShapes: "Area of Shapes (Tri Trap Par Cave)"
+    };
+
+    let allUsers = [];
+    let currentSection = "All";
+    let searchQuery = "";
+
+    function listenToStudents() {
+      const q = query(collection(db, "users"), where("role", "==", "student"));
+      onSnapshot(q, snapshot => {
+        allUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderSectionButtons();
+        updateTables();
+      });
+    }
+
+    function renderSectionButtons() {
+      const container = document.getElementById("sectionButtons");
+      const sections = ["All", ...new Set(allUsers.map(u => u.section).filter(Boolean))];
+      container.innerHTML = "";
+      sections.forEach(section => {
+        const btn = document.createElement("button");
+        btn.className = `section-btn ${section === currentSection ? "active" : ""}`;
+        btn.textContent = section;
+        btn.onclick = () => filterSection(section);
+        container.appendChild(btn);
+      });
+      // Keep the wrong answers section dropdown in sync with available sections
+      populateWrongSectionOptions();
+    }
+
+    // Populate the Wrong Answers section select with all sections found in the student list
+    function populateWrongSectionOptions() {
+      try {
+        const sel = document.getElementById('wrongSectionFilter');
+        if (!sel) return;
+        const existing = new Set(Array.from(sel.options).map(o => o.value));
+        const sections = [...new Set(allUsers.map(u => u.section).filter(Boolean))];
+        sections.forEach(s => {
+          if (!existing.has(s)) sel.appendChild(new Option(s, s));
+        });
+      } catch (e) { console.warn('populateWrongSectionOptions failed', e); }
+    }
+
+    function renderTabs() {
+      const tabsContainer = document.getElementById("topicTabs");
+      const contentContainer = document.getElementById("tabContents");
+      tabsContainer.innerHTML = "";
+      contentContainer.innerHTML = "";
+
+      Object.entries(topics).forEach(([key, label], i) => {
+        const tabBtn = document.createElement("button");
+        tabBtn.className = `tab-btn ${i === 0 ? "active" : ""}`;
+        tabBtn.textContent = label;
+        tabBtn.onclick = () => showTab(key);
+        tabsContainer.appendChild(tabBtn);
+
+        const content = document.createElement("div");
+        content.className = `tab-content ${i === 0 ? "active" : ""}`;
+        content.id = `tab-${key}`;
+        content.innerHTML = `
+          <div class="table-card">
+            <h3>${label}</h3>
+            <table>
+              <thead>
+                <tr><th>Last Name</th><th>First Name</th><th>Section</th><th>Score</th></tr>
+              </thead>
+              <tbody id="scores-${key}"></tbody>
+            </table>
+          </div>`;
+        contentContainer.appendChild(content);
+      });
+      updateTables();
+    }
+
+    function showTab(key) {
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        if (btn.textContent.includes(topics[key])) btn.classList.add("active");
+      });
+      document.getElementById(`tab-${key}`).classList.add("active");
+    }
+
+    function getScoreForTopic(user, topicLabel, topicKey) {
+      if (user.scores && user.scores[topicKey] !== undefined) return user.scores[topicKey];
+      if (user.progress) {
+        const match = Object.values(user.progress).find(p =>
+          p.title && topicLabel.toLowerCase().includes(p.title.toLowerCase())
+        );
+        if (match) return match.score;
+      }
+      return "N/A";
+    }
+
+    function updateTables() {
+      Object.keys(topics).forEach(key => {
+        const tbodyScores = document.getElementById(`scores-${key}`);
+        if (!tbodyScores) return;
+
+        const filteredUsers = allUsers.filter(u => {
+          const matchesSection = currentSection === "All" || u.section === currentSection;
+          const matchesSearch = `${u.first || ""} ${u.last || ""}`.toLowerCase().includes(searchQuery.toLowerCase());
+          return matchesSection && matchesSearch;
+        });
+
+        const topicRows = filteredUsers.map(u => {
+          const score = getScoreForTopic(u, topics[key], key);
+          return `
+            <tr>
+              <td>${u.last || "—"}</td>
+              <td>${u.first || "—"}</td>
+              <td>${u.section || "—"}</td>
+              <td>${score}</td>
+            </tr>`;
+        }).join("");
+
+        tbodyScores.innerHTML = topicRows || `<tr><td colspan="4">No data available</td></tr>`;
+      });
+    }
+
+    // =============== Analytics helpers ===============
+    async function computeAveragePerSection() {
+      const sections = {};
+      allUsers.forEach(u => {
+        const sec = u.section || 'Unknown';
+        const avg = computeUserAverage(u);
+        if (!sections[sec]) sections[sec] = { total: 0, count: 0 };
+        if (typeof avg === 'number') { sections[sec].total += avg; sections[sec].count++; }
+      });
+      const out = Object.entries(sections).map(([sec, v]) => `${sec}: ${v.count ? Math.round(v.total / v.count) : 'N/A'}`);
+      document.getElementById('avgPerSection').textContent = out.join('\n');
+    }
+
+    function computeUserAverage(user) {
+      const progress = user.progress || {};
+      const scores = Object.values(progress).map(p => p.score).filter(s => typeof s === 'number');
+      if (!scores.length) return 'N/A';
+      return Math.round(scores.reduce((a,b) => a+b,0)/scores.length);
+    }
+
+    function computeTopStudent() {
+      let top = null;
+      allUsers.forEach(u => {
+        const avg = computeUserAverage(u);
+        if (typeof avg === 'number' && (!top || avg > top.avg)) top = { user: u, avg };
+      });
+      document.getElementById('topStudent').textContent = top ? `${top.user.first} ${top.user.last} — ${top.avg}` : 'N/A';
+    }
+
+    function computeStudentsNeedingReview(threshold = 50) {
+      const list = allUsers.filter(u => {
+        const avg = computeUserAverage(u);
+        return typeof avg === 'number' && avg < threshold;
+      }).slice(0,10);
+      document.getElementById('needReview').innerHTML = list.length ? list.map(u => `${u.first || ''} ${u.last || ''} (${computeUserAverage(u)})`).join('<br/>') : 'None';
+    }
+
+    // =============== Customize Questions Modal ===============
+    const customizeHtml = `
+      <div class="modal" id="customizeModal">
+        <div class="modal-content">
+          <h3>Customize Questions</h3>
+          <label>Assessment ID</label>
+          <input id="customAssessmentId" placeholder="e.g. quest_1" />
+          <div id="questionsList"></div>
+          <button id="addQuestionBtn">Add Question</button>
+          <div style="margin-top:12px; text-align:right;"><button id="saveQuestionsBtn">Save</button> <button id="closeCustomizeBtn">Close</button></div>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', customizeHtml);
+
+    async function loadAssessment(id) {
+      try {
+        const ref = doc(db, 'assessments', id);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return null;
+        return snap.data();
+      } catch (e) { console.error(e); return null; }
+    }
+
+    function renderQuestionsEditor(assessment) {
+      const container = document.getElementById('questionsList');
+      container.innerHTML = '';
+      (assessment.questions || []).forEach((q, i) => {
+        const div = document.createElement('div');
+        div.innerHTML = `<input data-index="${i}" class="q-text" value="${q.question}" style="width:100%"/><br/><input data-index="${i}" class="q-answer" value="${q.answer}" style="width:100%"/>`;
+        container.appendChild(div);
+      });
+    }
+
+    async function saveAssessment(id) {
+      const container = document.getElementById('questionsList');
+      const qs = Array.from(container.querySelectorAll('.q-text')).map((el, i) => ({ question: el.value, answer: container.querySelectorAll('.q-answer')[i].value }));
+      await setDoc(doc(db, 'assessments', id), { title: id, questions: qs });
+      alert('Saved');
+    }
+
+    // Wire customize modal buttons
+    document.addEventListener('DOMContentLoaded', () => {
+      const customizeBtn = document.getElementById('customizeBtn');
+      const closeCustomizeBtn = document.getElementById('closeCustomizeBtn');
+      const saveQuestionsBtn = document.getElementById('saveQuestionsBtn');
+      const addQuestionBtn = document.getElementById('addQuestionBtn');
+      if (customizeBtn) customizeBtn.addEventListener('click', async () => {
+        document.getElementById('customizeModal').style.display = 'flex';
+        document.getElementById('customAssessmentId').value = 'quest_1';
+        const a = await loadAssessment('quest_1') || { questions: [] };
+        renderQuestionsEditor(a);
+      });
+      if (closeCustomizeBtn) closeCustomizeBtn.addEventListener('click', () => document.getElementById('customizeModal').style.display = 'none');
+      if (saveQuestionsBtn) saveQuestionsBtn.addEventListener('click', async () => {
+        const id = document.getElementById('customAssessmentId').value.trim();
+        if (!id) return alert('Enter assessment id');
+        await saveAssessment(id);
+      });
+      if (addQuestionBtn) addQuestionBtn.addEventListener('click', () => {
+        const container = document.getElementById('questionsList');
+        const idx = container.children.length;
+        const div = document.createElement('div');
+        div.innerHTML = `<input class="q-text" value="New question" style="width:100%"/><br/><input class="q-answer" value="Answer" style="width:100%"/>`;
+        container.appendChild(div);
+      });
+    });
+
+    document.getElementById("searchInput").addEventListener("input", e => {
+      searchQuery = e.target.value.trim();
+      updateTables();
+    });
+
+    window.filterSection = function (section) {
+      currentSection = section;
+      document.querySelectorAll(".section-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".section-btn").forEach(btn => {
+        if (btn.textContent === section) btn.classList.add("active");
+      });
+      updateTables();
+    };
+
+    window.goBack = function () {
+      window.location.href = "teacher.html";
+    };
+
+    function init() {
+      renderTabs();
+      listenToStudents();
+    
+    }
+    // Add Performance Analytics modal UI dynamically
+    const analyticsModalHtml = `
+      <div class="modal" id="analyticsModal">
+        <div class="modal-content">
+          <h3>Performance Analytics</h3>
+
+          <!-- Dashboard cards (moved here) -->
+          <div class="table-card" id="dashboardCardsModal" style="display:flex; gap:12px; flex-wrap:wrap; justify-content:space-between; margin-bottom:20px;">
+            <div class="card" style="flex:1; min-width:220px;">
+              <h3>📊 Average score per section</h3>
+              <div id="avgPerSection">Loading...</div>
+            </div>
+            <div class="card" style="flex:1; min-width:220px;">
+              <h3>🧠 Top-performing student</h3>
+              <div id="topStudent">Loading...</div>
+            </div>
+            <div class="card" style="flex:1; min-width:220px;">
+              <h3>🚩 Students needing review</h3>
+              <div id="needReview">Loading...</div>
+            </div>
+            <div class="card" style="flex:0 0 220px; align-self:flex-start;">
+              <h3>⚙️ Manage</h3>
+              <button id="customizeBtn">Customize Questions</button>
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <canvas id="barChart" style="max-height:300px;"></canvas>
+          <canvas id="pieChart" style="max-height:300px;"></canvas>
+          <canvas id="lineChart" style="max-height:300px;"></canvas>
+          <br/>
+          <button onclick="closeAnalyticsModal()">Close</button>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', analyticsModalHtml);
+
+    window.openAnalyticsModal = function() { 
+      document.getElementById('analyticsModal').style.display = 'flex'; 
+      // refresh stats shown in the dashboard inside the modal
+      computeAveragePerSection();
+      computeTopStudent();
+      computeStudentsNeedingReview();
+      loadPerformanceAnalytics();
+    };
+    window.closeAnalyticsModal = function() { document.getElementById('analyticsModal').style.display = 'none'; };
+
+    // Wire header buttons (safer than inline onclick)
+    document.addEventListener('DOMContentLoaded', () => {
+      const aBtn = document.getElementById('analyticsBtn');
+      const wBtn = document.getElementById('wrongBtn');
+      const bBtn = document.getElementById('backBtn');
+      if (aBtn) aBtn.addEventListener('click', () => window.openAnalyticsModal());
+      if (wBtn) wBtn.addEventListener('click', () => window.openWrongAnswersModal());
+      if (bBtn) bBtn.addEventListener('click', () => window.goBack());
+      // Close buttons inside modals
+      const closeWrongBtn = document.getElementById('closeWrongBtn');
+      if (closeWrongBtn) closeWrongBtn.addEventListener('click', () => window.closeWrongAnswersModal());
+      // The analytics modal close button is injected in analyticsModalHtml; add a delegated listener
+      document.addEventListener('click', (e) => {
+        if (e.target && e.target.matches && e.target.matches('button') && e.target.textContent.trim() === 'Close') {
+          // prefer analytics close if analytics modal is open
+          if (document.getElementById('analyticsModal')?.style.display === 'flex') window.closeAnalyticsModal();
+        }
+      });
+      // attach handler for the Customize Questions button inside analytics modal (it is injected dynamically)
+      document.addEventListener('click', async (e) => {
+        if (e.target && e.target.id === 'customizeBtn') {
+          // open customize modal and load default assessment
+          document.getElementById('customizeModal').style.display = 'flex';
+          document.getElementById('customAssessmentId').value = 'quest_1';
+          const a = await loadAssessment('quest_1') || { questions: [] };
+          renderQuestionsEditor(a);
+        }
+      });
+    });
+
+    async function loadPerformanceAnalytics() {
+      const { collection, query, where, getDocs, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js');
+      const studentsQ = query(collection(db, 'users'), where('role', '==', 'student'));
+      const snapshot = await getDocs(studentsQ);
+
+      let totalCorrect = 0, totalWrong = 0;
+      const questScores = [];
+      const questLabels = [];
+
+      for (const studentDoc of snapshot.docs) {
+        const userData = studentDoc.data();
+        const progress = userData.progress || {};
+        for (const [pid, p] of Object.entries(progress)) {
+          questLabels.push(`${userData.last || userData.name || 'Unknown'}: ${p.title || pid}`);
+          questScores.push(p.score || 0);
+          totalCorrect += p.correct || 0;
+          totalWrong += p.wrong || 0;
+        }
+      }
+
+      // Create/destroy charts
+      if (window.barChartInstance) window.barChartInstance.destroy();
+      if (window.pieChartInstance) window.pieChartInstance.destroy();
+      if (window.lineChartInstance) window.lineChartInstance.destroy();
+
+      const Chart = (await import('https://cdn.jsdelivr.net/npm/chart.js')).default;
+      const barCtx = document.getElementById('barChart').getContext('2d');
+      window.barChartInstance = new Chart(barCtx, { type: 'bar', data: { labels: questLabels, datasets: [{ label: 'Score per Quest', data: questScores, backgroundColor: '#6b8e23' }] }, options: { responsive: true } });
+
+      const pieCtx = document.getElementById('pieChart').getContext('2d');
+      window.pieChartInstance = new Chart(pieCtx, { type: 'pie', data: { labels: ['Correct','Wrong'], datasets: [{ data: [totalCorrect, totalWrong], backgroundColor: ['#6b8e23','#b6c28f'] }] }, options: { responsive: true } });
+
+      const lineCtx = document.getElementById('lineChart').getContext('2d');
+      window.lineChartInstance = new Chart(lineCtx, { type: 'line', data: { labels: questLabels, datasets: [{ label: 'Performance Over Time', data: questScores, borderColor: '#4c6a1a', fill: false }] }, options: { responsive: true } });
+    }
+    window.openWrongAnswersModal = function() {
+      document.getElementById("wrongAnswersModal").style.display = "flex";
+      window.loadWrongAnswers && window.loadWrongAnswers();
+    }
+    window.closeWrongAnswersModal = function() {
+      document.getElementById("wrongAnswersModal").style.display = "none";
+    }
+
+    // =============== WRONG ANSWERS (AGGREGATED) ===============
+  window.loadWrongAnswers = async function() {
+      const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js');
+      const tbody = document.querySelector("#wrongAnswersTable tbody");
+      tbody.innerHTML = "<tr><td colspan='4'>Loading...</td></tr>";
+
+      const questionStats = {};
+      const studentsQ = query(collection(db, "users"), where("role", "==", "student"));
+      const snapshot = await getDocs(studentsQ);
+
+      for (const studentDoc of snapshot.docs) {
+        const studentData = studentDoc.data();
+        const progress = studentData.progress || {};
+        Object.values(progress).forEach(p => {
+          (p.questions || []).forEach(q => {
+            const key = q.question ? q.question.trim().toLowerCase() : '';
+            if (!key) return;
+            if (!questionStats[key]) {
+              questionStats[key] = {
+                question: q.question,
+                correctAnswer: q.correctAnswer || '',
+                studentAnswers: {} // { answerText: count }
+              };
+            }
+            // collect the student's answer (if present)
+            const studentAns = (q.studentAnswer !== undefined) ? String(q.studentAnswer).trim() : ((q.answer !== undefined) ? String(q.answer).trim() : '');
+            if (studentAns) {
+              questionStats[key].studentAnswers[studentAns] = (questionStats[key].studentAnswers[studentAns] || 0) + 1;
+            }
+          });
+        });
+      }
+      const sorted = Object.values(questionStats).sort((a, b) => {
+        const aCount = Object.values(a.studentAnswers).reduce((s, v) => s + v, 0);
+        const bCount = Object.values(b.studentAnswers).reduce((s, v) => s + v, 0);
+        return bCount - aCount;
+      });
+      if (sorted.length > 0) {
+        tbody.innerHTML = sorted.map((q, i) => {
+          const answers = Object.entries(q.studentAnswers).sort((a,b) => b[1]-a[1]).map(([ans, cnt]) => `${ans}: ${cnt}`).join(', ');
+          return `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${q.question}</td>
+            <td>${q.correctAnswer}</td>
+            <td>${answers || '—'}</td>
+          </tr>`;
+        }).join("");
+      } else {
+        tbody.innerHTML = "<tr><td colspan='4'>No data found.</td></tr>";
+      }
+  }
+      init();
+    </script>
+
+      <!-- 🧩 Wrong Answers Modal (with filters and mini-charts) -->
+      <div class="modal" id="wrongAnswersModal">
+        <div class="modal-content">
+          <h3>Most Missed Questions</h3>
+
+          <!-- Filters: topic tabs and section (date range removed). Pagination will be applied below. -->
+          <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+            <div id="wrongTopicTabs" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <label style="font-weight:600;">Section:</label>
+              <select id="wrongSectionFilter"><option value="All">All</option></select>
+              <button id="wrongFilterClear">Clear</button>
+            </div>
+          </div>
+
+          <!-- Status / debug info -->
+          <div id="wrongStatus" style="margin-bottom:10px; color:#3d3d3d; font-size:0.95rem;"></div>
+
+          <table id="wrongAnswersTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Question</th>
+                <th>Correct Answer</th>
+                <th>Student Answers</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <!-- Pagination controls -->
+          <div id="wrongPagination" style="display:flex; gap:8px; align-items:center; justify-content:center; margin-top:12px;"></div>
+          <br/>
+          <button id="closeWrongBtn">Close</button>
+        </div>
+      </div>
+
+      <!-- Drilldown modal for per-question student details -->
+      <div class="modal" id="wrongDetailModal">
+        <div class="modal-content">
+          <h3 id="detailTitle">Question detail</h3>
+          <div id="detailList" style="max-height:400px; overflow:auto; margin-bottom:12px;"></div>
+          <button id="closeDetailBtn">Close</button>
+        </div>
+      </div>
+
+    <script>
+      // Wiring for Wrong Answers filters and drilldown
+      document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('wrongFilterApply')?.addEventListener('click', () => window.loadWrongAnswers());
+        document.getElementById('wrongFilterClear')?.addEventListener('click', () => {
+          document.getElementById('wrongSectionFilter').value = 'All';
+          window._wrongTopicSelected = _topicListExplicit[0];
+          window._wrongPage = 1;
+          renderTopicTabs();
+          window.loadWrongAnswers();
+        });
+    document.getElementById('closeWrongBtn')?.addEventListener('click', () => window.closeWrongAnswersModal());
+        document.getElementById('closeDetailBtn')?.addEventListener('click', () => document.getElementById('wrongDetailModal').style.display = 'none');
+        // delegate row clicks to open drilldown
+        document.querySelector('#wrongAnswersTable tbody')?.addEventListener('click', (e) => {
+          const tr = e.target.closest('tr');
+          if (!tr || !tr.dataset || !tr.dataset.qkey) return;
+          const qkey = tr.dataset.qkey;
+          const stats = window._wrongQuestionStats && window._wrongQuestionStats[qkey];
+          if (stats) openWrongDetail(qkey, stats);
+        });
+        // render topic tabs at start
+        renderTopicTabs();
+      });
+
+      // Helper: parse candidate timestamp fields into Date or null
+      function parsePossibleDate(obj) {
+        if (!obj) return null;
+        const candidates = [obj.timestamp, obj.submittedAt, obj.date, obj.time];
+        for (const c of candidates) {
+          if (!c) continue;
+          // handle numeric (ms) or ISO string
+          const n = Number(c);
+          if (!Number.isNaN(n)) return new Date(n);
+          const d = new Date(c);
+          if (!isNaN(d)) return d;
+        }
+        return null;
+      }
+
+      // Normalize question text for tolerant matching: remove punctuation, collapse whitespace, lowercase
+      function normalizeText(str) {
+        if (!str && str !== 0) return '';
+        try {
+          return String(str)
+            .normalize ? String(str).normalize('NFKD') : String(str)
+            .replace(/\p{Diacritic}/gu, '')
+            .replace(/[^\w\s]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toLowerCase();
+        } catch (e) {
+          // Fallback if Unicode properties unsupported
+          return String(str).replace(/[^A-Za-z0-9\s]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+        }
+      }
+
+      // Sanitize a raw key (assessmentId__idx or similar) to a safe DOM id/key
+      function sanitizeKey(k) {
+        return String(k).toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
+      }
+
+      // Topic tabs + pagination state
+      const _topicListExplicit = [
+        'Time and World Zones (Timeless Village)',
+        'GMDAS Operations (Operation Forest)',
+        'Multiplying Fractions (Fraction River)',
+        'Area of Shapes (Tri Trap Par Cave)'
+      ];
+      window._wrongTopicSelected = _topicListExplicit[0];
+      window._wrongPage = 1;
+      window._wrongRowsPerPage = 15;
+
+      function renderTopicTabs() {
+        const tabs = document.getElementById('wrongTopicTabs');
+        if (!tabs) return;
+        tabs.innerHTML = '';
+        // Render explicit topics in the requested order
+        _topicListExplicit.forEach(t => {
+          const btn = document.createElement('button');
+          btn.textContent = t;
+          btn.className = window._wrongTopicSelected === t ? 'tab-btn active' : 'tab-btn';
+          btn.onclick = () => { window._wrongTopicSelected = t; window._wrongPage = 1; window.loadWrongAnswers(); renderTopicTabs(); };
+          tabs.appendChild(btn);
+        });
+      }
+
+      function renderWrongPagination(totalRows) {
+        const container = document.getElementById('wrongPagination');
+        if (!container) return;
+        container.innerHTML = '';
+        const totalPages = Math.max(1, Math.ceil(totalRows / window._wrongRowsPerPage));
+        const prev = document.createElement('button'); prev.textContent = 'Prev'; prev.disabled = window._wrongPage <= 1;
+        const next = document.createElement('button'); next.textContent = 'Next'; next.disabled = window._wrongPage >= totalPages;
+        prev.onclick = () => { if (window._wrongPage > 1) { window._wrongPage--; window.loadWrongAnswers(); } };
+        next.onclick = () => { if (window._wrongPage < totalPages) { window._wrongPage++; window.loadWrongAnswers(); } };
+        container.appendChild(prev);
+        const info = document.createElement('span'); info.textContent = ` Page ${window._wrongPage} of ${totalPages} `;
+        container.appendChild(info);
+        container.appendChild(next);
+      }
+
+      async function openWrongDetail(qkey, stats) {
+        document.getElementById('detailTitle').textContent = stats.question || 'Question detail';
+        const container = document.getElementById('detailList');
+        container.innerHTML = '';
+        // show correct answer
+        const h = document.createElement('div');
+        h.innerHTML = `<strong>Correct Answer:</strong> ${stats.correctAnswer || '—'}`;
+        container.appendChild(h);
+        container.appendChild(document.createElement('hr'));
+        // list students
+        const list = document.createElement('div');
+        stats.studentList = stats.studentList || [];
+        if (!stats.studentList.length) {
+          list.textContent = 'No student details available.';
+        } else {
+          stats.studentList.forEach(s => {
+            const item = document.createElement('div');
+            item.style.padding = '6px 0';
+            item.innerHTML = `<strong>${s.name || '—'}</strong> <span style="color:#666">(${s.section || '—'})</span>: <em>${s.answer || '—'}</em>`;
+            list.appendChild(item);
+          });
+        }
+        container.appendChild(list);
+        document.getElementById('wrongDetailModal').style.display = 'flex';
+      }
+
+      // Enhanced loadWrongAnswers: builds studentAnswers counts and studentList for drilldown
+      window.loadWrongAnswers = async function() {
+        const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js');
+        const tbody = document.querySelector('#wrongAnswersTable tbody');
+        tbody.innerHTML = "<tr><td colspan='4'>Loading...</td></tr>";
+
+  const topicFilter = window._wrongTopicSelected || 'All';
+    const sectionFilter = document.getElementById('wrongSectionFilter')?.value || 'All';
+  const startDate = null; const endDate = null; // date filtering removed; we use pagination instead
+
+        // Load all assessment questions first so every created question appears in the table
+    const questionStats = {};
+    const assessmentDocs = await getDocs(collection(db, 'assessments'));
+    // diagnostics
+    let diag = { assessments: 0, assessmentQuestions: 0, students: 0, studentQuestionEntries: 0, unmatchedSamples: new Set() };
+        const questionTextIndex = {}; // maps normalized text -> [rawKeys]
+        const questionIdIndex = {};   // maps questionId -> [rawKeys]
+        // Prepare normalized topic lookup from explicit topic list
+        const normalizedTopics = (_topicListExplicit || []).map(t => normalizeText(t));
+
+        assessmentDocs.forEach(aDoc => {
+          const a = aDoc.data() || {};
+          const qs = Array.isArray(a.questions) ? a.questions : [];
+          diag.assessments++;
+          diag.assessmentQuestions += qs.length;
+          qs.forEach((qObj, idx) => {
+            const qText = qObj.question ? String(qObj.question).trim() : '';
+            const rawKey = `${aDoc.id}__${idx}`; // unique per assessment question
+            // determine assessment topic by checking common fields and matching against known topics
+            let aTopicCandidate = a.topic || a.topics || a.tags || a.assessmentTopic || a.title || aDoc.id;
+            // if tags is an array, join
+            if (Array.isArray(aTopicCandidate)) aTopicCandidate = aTopicCandidate.join(' ');
+            const aTopicNorm = normalizeText(aTopicCandidate || '');
+            const matchedTopic = normalizedTopics.find(nt => aTopicNorm.includes(nt)) || '';
+
+            questionStats[rawKey] = {
+              question: qText,
+              questionNormalized: normalizeText(qText),
+              correctAnswer: qObj.answer || qObj.correctAnswer || '',
+              studentAnswers: {},
+              studentList: [],
+              assessmentId: aDoc.id,
+              assessmentTitle: a.title || aDoc.id,
+              assessmentTopicNormalized: matchedTopic
+            };
+            const norm = questionStats[rawKey].questionNormalized;
+            if (norm) {
+              questionTextIndex[norm] = questionTextIndex[norm] || [];
+              questionTextIndex[norm].push(rawKey);
+            }
+            // index by explicit question id if present
+            const qid = qObj.id || qObj.questionId || qObj.qid || null;
+            if (qid) {
+              questionIdIndex[qid] = questionIdIndex[qid] || [];
+              questionIdIndex[qid].push(rawKey);
+            }
+          });
+          // Extra diagnostics: capture some sample assessments/questions for visibility
+          const assessmentSample = assessmentDocs.docs.slice(0,3).map(d => ({ id: d.id, title: (d.data()||{}).title || '', questions: ((d.data()||{}).questions||[]).slice(0,3).map(q=>q.question||q.questionText||'') }));
+          console.log('Assessment sample:', assessmentSample);
+        });
+
+    // Now aggregate student attempts by matching question text to assessment questions
+    // Diagnostic: we'll peek at a few student docs to see if per-question attempts exist
+    try {
+      const studentPeek = (await getDocs(query(collection(db, 'users'), where('role','==','student'), ))).docs.slice(0,4).map(d => ({ id: d.id, number: d.data().number, progressKeys: Object.keys(d.data().progress||{}), sampleProgress: Object.values(d.data().progress||{}).slice(0,2) }));
+      console.log('Student sample (peek):', studentPeek);
+      const statusEl2 = document.getElementById('wrongStatus');
+      if (statusEl2) statusEl2.textContent = `Indexed ${Object.keys(questionStats).length} assessment questions. Sample assessments: ${assessmentSample.map(a=>a.id).join(', ') || 'none'}. Peeked ${studentPeek.length} students (see console for details).`;
+    } catch (e) { console.warn('student peek failed', e); }
+    const studentsQ = query(collection(db, 'users'), where('role', '==', 'student'));
+    const snapshot = await getDocs(studentsQ);
+    diag.students = snapshot.docs.length;
+        const seenSections = new Set();
+
+        for (const studentDoc of snapshot.docs) {
+          const studentData = studentDoc.data();
+          const studentSection = studentData.section || '—';
+          seenSections.add(studentSection);
+
+          // apply section filter early
+          if (sectionFilter !== 'All' && studentSection !== sectionFilter) continue;
+
+          // student progress shape may vary; try multiple common keys
+          const progress = studentData.progress || studentData.progressData || studentData.attempts || {};
+          for (const p of Object.values(progress)) {
+            const pDate = parsePossibleDate(p);
+            // support alternative naming used in some payloads
+            const qList = Array.isArray(p.questions) ? p.questions : (Array.isArray(p.answers) ? p.answers : (Array.isArray(p.responses) ? p.responses : []));
+            if (!qList.length) {
+              // collect example of empty/mismatched progress for debugging
+              // record keys present on p
+              diag.unmatchedSamples.add('no_questions_in_progress_entry');
+            }
+            qList.forEach(q => {
+              diag.studentQuestionEntries++;
+              const qText = q.question ? String(q.question).trim() : '';
+              const qid = q.id || q.questionId || q.qid || null;
+              let matchingKeys = [];
+              if (qid && questionIdIndex[qid]) matchingKeys = questionIdIndex[qid];
+              else matchingKeys = questionTextIndex[normalizeText(qText)] || [];
+              // student number field (fall back to document id)
+              const studentNumber = studentData.number || studentData.num || studentData.username || studentDoc.id;
+              const studentAns = (q.studentAnswer !== undefined) ? String(q.studentAnswer).trim() : ((q.answer !== undefined) ? String(q.answer).trim() : '');
+              if (!matchingKeys.length) {
+                // capture a short sample of unmatched question texts for debugging
+                if (qText) diag.unmatchedSamples.add(qText.slice(0,120));
+              }
+              matchingKeys.forEach(mk => {
+                // if a topic is selected, ensure the assessment's topic matches
+                try {
+                  const sel = normalizeText(topicFilter || 'All');
+                  const aTopic = questionStats[mk].assessmentTopicNormalized || '';
+                  if (sel && sel !== 'all' && aTopic !== sel) return; // skip this matched key
+                } catch (e) { /* ignore */ }
+                // tally answer counts
+                if (studentAns) questionStats[mk].studentAnswers[studentAns] = (questionStats[mk].studentAnswers[studentAns] || 0) + 1;
+                // push student number for the Student Answered column
+                questionStats[mk].studentList.push({ number: studentNumber, name: `${studentData.first || ''} ${studentData.last || ''}`.trim(), section: studentSection, answer: studentAns, date: parsePossibleDate(q) || pDate || null });
+              });
+            });
+          }
+        }
+
+        // Diagnostics: show counts and samples in status for easier debugging
+        try {
+          const statusEl = document.getElementById('wrongStatus');
+          if (statusEl) {
+            const samples = Array.from(diag.unmatchedSamples).slice(0,10).join('; ');
+            statusEl.textContent = `Assessments: ${diag.assessments}, Questions: ${diag.assessmentQuestions}, Students scanned: ${diag.students}, Student question entries: ${diag.studentQuestionEntries}. Unmatched examples: ${samples || 'none'}`;
+          }
+          console.log('WrongAnswers diagnostics:', diag);
+          // also log indexes for inspection
+          console.log('questionTextIndex keys (sample):', Object.keys(questionTextIndex).slice(0,20));
+        } catch (e) { console.warn('diag update failed', e); }
+
+        // populate section filter options
+        const sectionSel = document.getElementById('wrongSectionFilter');
+        if (sectionSel) {
+          const existing = new Set(Array.from(sectionSel.options).map(o => o.value));
+          Array.from(seenSections).forEach(s => { if (!existing.has(s)) sectionSel.appendChild(new Option(s, s)); });
+        }
+
+        // populate topic filter options from global topics object if present
+        try {
+          const topicSel = document.getElementById('wrongTopicFilter');
+          if (topicSel && typeof topics === 'object') {
+            Object.values(topics).forEach(t => {
+              if (![...topicSel.options].some(o => o.value === t)) topicSel.appendChild(new Option(t, t));
+            });
+          }
+        } catch (e) { /* ignore if topics not available */ }
+
+        // store for drilldown access using sanitized keys (match row data-qkey)
+        window._wrongQuestionStats = {};
+        Object.entries(questionStats).forEach(([rawKey, obj]) => {
+          const sKey = sanitizeKey(rawKey);
+          window._wrongQuestionStats[sKey] = obj;
+        });
+
+        // Determine which questions match the selected topic (per-assessment)
+        const selTopicNorm = normalizeText(window._wrongTopicSelected || 'All');
+        const allQuestionEntries = Object.entries(questionStats);
+        let filteredEntries = allQuestionEntries;
+        if (selTopicNorm && selTopicNorm !== 'all') {
+          filteredEntries = allQuestionEntries.filter(([k, obj]) => {
+            const at = obj.assessmentTopicNormalized || '';
+            // permissive match: includes or equals
+            return at && (at.includes(selTopicNorm) || selTopicNorm.includes(at));
+          });
+        }
+
+        // if no entries after filtering, fallback to showing all and display a status message
+        let usedEntries = filteredEntries;
+        let fallbackToAll = false;
+        if (!usedEntries.length) {
+          fallbackToAll = true;
+          usedEntries = allQuestionEntries;
+        }
+
+        const sorted = usedEntries.map(e => e[1]).sort((a, b) => {
+          const aCount = Object.values(a.studentAnswers).reduce((s, v) => s + v, 0);
+          const bCount = Object.values(b.studentAnswers).reduce((s, v) => s + v, 0);
+          return bCount - aCount;
+        });
+
+        // render status info
+        const statusEl = document.getElementById('wrongStatus');
+        if (statusEl) {
+          const totalAssessments = assessmentDocs.size || 0;
+          const totalQuestions = Object.keys(questionStats).length;
+          const matchedCount = filteredEntries.length;
+          statusEl.textContent = fallbackToAll
+            ? `Showing all ${totalQuestions} questions (no questions matched selected topic).` 
+            : `Found ${matchedCount} questions for topic "${window._wrongTopicSelected}" — showing ${sorted.length} results.`;
+        }
+
+        if (sorted.length === 0) {
+          tbody.innerHTML = "<tr><td colspan='4'>No data found.</td></tr>";
+          renderWrongPagination(0);
+          return;
+        }
+
+        // Pagination: compute slice
+        const startIdx = (window._wrongPage - 1) * window._wrongRowsPerPage;
+        const pageSlice = sorted.slice(startIdx, startIdx + window._wrongRowsPerPage);
+
+        // render rows with a small canvas for mini-chart in the Student Answers column
+        tbody.innerHTML = pageSlice.map((q, i) => {
+          // encode a safe key for data attribute (must match window._wrongQuestionStats keys)
+          const key = sanitizeKey(q.assessmentId ? `${q.assessmentId}__${i + startIdx}` : q.question || `q_${startIdx + i}`);
+          // build comma-separated student numbers for this question (unique)
+          const studentNumbers = Array.from(new Set((q.studentList || []).map(s => s.number).filter(Boolean))).join(', ');
+          return `
+            <tr data-qkey="${key}">
+              <td>${startIdx + i + 1}</td>
+              <td style="max-width:360px;">${q.question}</td>
+              <td>${q.correctAnswer || '—'}</td>
+              <td>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <div style="flex:1">${studentNumbers || '—'}</div>
+                  <canvas id="miniChart-${key}" width="140" height="60" style="max-width:140px; max-height:60px"></canvas>
+                </div>
+              </td>
+            </tr>`;
+        }).join('');
+
+        // draw mini-charts
+        try {
+          const Chart = (await import('https://cdn.jsdelivr.net/npm/chart.js')).default;
+          pageSlice.forEach((q, idx) => {
+            const key = sanitizeKey(q.assessmentId ? `${q.assessmentId}__${startIdx + idx}` : q.question || `q_${startIdx + idx}`);
+            const canvas = document.getElementById(`miniChart-${key}`);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            // derive counts keyed by student answer value for charting
+            const items = Object.entries(q.studentAnswers).sort((a,b)=>b[1]-a[1]);
+            const labels = items.map(i=>i[0]);
+            const data = items.map(i=>i[1]);
+            // lightweight bar chart
+            new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ data, backgroundColor: '#6b8e23' }] }, options: { responsive: false, plugins:{legend:{display:false}}, scales:{x:{display:false}, y:{display:false}} } });
+          });
+        } catch (e) {
+          console.warn('Chart render failed for mini-charts', e);
+        }
+
+        // render pagination controls based on full sorted length
+        renderWrongPagination(sorted.length);
+      }
+
+      // ensure wrong answers loads when modal opens
+      const originalOpenWrong = window.openWrongAnswersModal;
+      window.openWrongAnswersModal = function() {
+        document.getElementById('wrongAnswersModal').style.display = 'flex';
+        window.loadWrongAnswers && window.loadWrongAnswers();
+        if (originalOpenWrong) originalOpenWrong();
+      }
+    </script>
+
+    </body>
+    </html>

@@ -1,0 +1,123 @@
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Curriculum Customization | iMATHgination</title>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f6f8fc;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: linear-gradient(90deg, #00a2ff, #0072ff);
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 0 0 12px 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    button {
+      background: white;
+      color: #007bff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background: #e9efff;
+    }
+
+    main {
+      padding: 40px;
+    }
+
+    h2 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #555;
+      font-size: 0.95rem;
+    }
+
+    .placeholder {
+      background: #fff;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      text-align: center;
+      margin-top: 30px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Curriculum Customization</h1>
+    <button onclick="goBack()">Back to Dashboard</button>
+  </header>
+
+  <main>
+    <h2>Customize Lessons</h2>
+    <p>Align math lessons with DepEd’s Matatag Curriculum and adapt activities per section.</p>
+
+    <div class="placeholder">
+      🧩 Curriculum alignment area (coming soon)
+    </div>
+  </main>
+
+  <script>
+    function goBack() {
+      window.location.href = "teacher.html";
+    }
+  </script>
+</body>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyADVdmyzhrewkr2-AjV15NwdAqrfhw2TaY",
+    authDomain: "imathgination-7e610.firebaseapp.com",
+    projectId: "imathgination-7e610",
+    storageBucket: "imathgination-7e610.appspot.com",
+    messagingSenderId: "591589679937",
+    appId: "1:591589679937:web:5298f062812021e64c77c0",
+    measurementId: "G-NQBJ952VLG"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = getFirestore(app);
+
+  async function addData() {
+    try {
+      const docRef = await addDoc(collection(db, "yourCollectionName"), {
+        field1: "value1",
+        field2: "value2"
+      });
+      console.log("Document written with ID: ", docRef.id);
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    }
+  }
+  // Call addData() when needed
+</script>
+</html>
