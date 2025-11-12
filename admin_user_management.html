@@ -139,12 +139,55 @@
     }
 
     .edit-btn { background: var(--primary-dark); color: white; }
-    .deactivate-btn { background: var(--warn); color: #2b2b2b; }
     .delete-btn { background: var(--error); color: white; }
 
     .edit-btn:hover { background: #567e1a; }
-    .deactivate-btn:hover { background: #c7952d; }
     .delete-btn:hover { background: #a83f3f; }
+
+    /* disabled action buttons (when user is inactive) */
+    td button[disabled] {
+      opacity: 0.55;
+      filter: grayscale(40%);
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* === Toggle Switch === */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 42px;
+      height: 22px;
+      vertical-align: middle;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--warn);
+      transition: .3s;
+      border-radius: 22px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px; width: 16px;
+      left: 3px; bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--success);
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
 
     /* ========== MODALS ========== */
     .modal {
@@ -165,10 +208,30 @@
       border-radius: 16px;
       padding: 28px 24px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
-      width: 360px;
+      width: 520px;
+      max-width: 90vw;
+      max-height: 80vh;
+      overflow: auto;
       animation: fadeIn 0.25s ease-out;
       display: flex;
       flex-direction: column;
+    }
+
+    /* modal-content block (used by some modals that don't use <form>) */
+    .modal .modal-content {
+      background: #fffef9;
+      border: 2px solid var(--bg-frame);
+      border-radius: 12px;
+      padding: 20px 22px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      width: 520px;
+      max-width: 92vw;
+      max-height: 86vh;
+      overflow: auto;
+      animation: fadeIn 0.25s ease-out;
+      display: flex;
+      flex-direction: column;
+      z-index: 1100;
     }
 
     .modal h3 {
@@ -207,11 +270,43 @@
       outline: none;
     }
 
+    /* make selects match inputs */
+    .form-group select {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      font-family: var(--font-main);
+      background: white;
+    }
+
+    .form-group select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 4px var(--primary); }
+
+    /* Excel preview container inside modal */
+    .excel-preview {
+      max-height: 320px;
+      overflow: auto;
+      margin-top: 8px;
+      border: 1px solid #ddd;
+      background: white;
+      padding: 6px;
+      border-radius: 6px;
+    }
+    .excel-preview-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .excel-preview-table th, .excel-preview-table td { padding: 6px; border: 1px solid #ddd; word-break: break-word; vertical-align: top; }
+
     .form-actions {
       display: flex;
       justify-content: flex-end;
       gap: 10px;
       margin-top: 10px;
+    }
+
+    /* button focus ring for better accessibility and to avoid black outlines */
+    .cancel-btn:focus, .save-btn:focus, .delete-btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(0,0,0,0.06);
     }
 
     .cancel-btn, .save-btn {
@@ -233,6 +328,11 @@
       from { transform: translateY(-10px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
+
+    /* pagination styles */
+    #userPagination button { border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+    #userPagination .save-btn { background: var(--primary-dark); color: white; padding: 6px 10px; }
+    #userPagination .cancel-btn { background: #cfcfcf; color: #2b2b2b; padding: 6px 10px; }
 
     /* 🔔 Toast Notification Styles */
     .toast-container {
@@ -286,16 +386,39 @@
       <button id="teacherBtn">Teachers</button>
     </div>
 
-    <button class="add-btn" onclick="showAddUserForm()">+ Add User</button>
+    <div style="display:flex; gap:10px; justify-content:center; margin-bottom:15px;">
+      <button class="add-btn" onclick="showAddUserForm()">+ Add User</button>
+      <button id="manageSectionsBtn" class="add-btn" style="background:#fff;color:var(--primary-dark);border:1px solid var(--bg-frame);padding:8px 12px;" onclick="openSectionsModal()">Manage Sections</button>
+      <button id="exportExcelBtn" class="add-btn" type="button" style="background:#fff;color:var(--primary-dark);border:1px solid var(--bg-frame);padding:8px 12px;">Export Excel</button>
+  <button id="excelBatchUploadBtn" class="add-btn" type="button" style="background:#fff;color:var(--primary-dark);border:1px solid var(--bg-frame);padding:8px 12px;">Upload Excel</button>
+      <button id="showArchivedBtn" class="add-btn" type="button" style="background:#fff;color:var(--primary-dark);border:1px solid var(--bg-frame);padding:8px 12px;">Show Archived</button>
+    </div>
 
-    <!-- 🔹 Add User Modal -->
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <label for="filterSectionSelect" style="font-weight:700; color:var(--primary-dark);">Section:</label>
+      <select id="filterSectionSelect" style="min-width:200px;">
+        <option value="">(All sections)</option>
+      </select>
+      <label for="filterStatusSelect" style="font-weight:700; color:var(--primary-dark); margin-left:12px;">Status:</label>
+      <select id="filterStatusSelect" style="min-width:140px;">
+        <option value="active" selected>Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+    </div>
+
+    <!-- Add User Modal -->
     <div id="addUserModal" class="modal">
       <form id="addUserForm">
         <h3>Add User</h3>
         <div class="form-group"><label>Last Name</label><input name="last" required /></div>
         <div class="form-group"><label>First Name</label><input name="first" required /></div>
-        <div class="form-group"><label>M.I.</label><input name="mi" /></div>
-        <div class="form-group"><label>Section</label><input name="section" /></div>
+        <div class="form-group"><label>M.I. (optional)</label><input name="mi" /></div>
+        <div class="form-group"><label>Suffix (optional)</label><input name="suffix" /></div>
+        <div class="form-group"><label>Section</label>
+          <select name="section" id="addSectionSelect">
+            <option value="">(Select section)</option>
+          </select>
+        </div>
         <div class="form-group"><label>Email (Teachers Only)</label><input name="email" /></div>
         <div class="form-group"><label>Subject (Teachers Only)</label><input name="subject" /></div>
         <div class="form-actions">
@@ -305,20 +428,86 @@
       </form>
     </div>
 
-    <!-- 🔹 Edit User Modal -->
+    <!-- Edit User Modal -->
     <div id="editUserModal" class="modal">
       <form id="editUserForm">
         <h3>Edit User Details</h3>
         <div class="form-group"><label>Last Name</label><input name="last" required /></div>
         <div class="form-group"><label>First Name</label><input name="first" required /></div>
         <div class="form-group"><label>M.I.</label><input name="mi" /></div>
-        <div class="form-group"><label>Section</label><input name="section" /></div>
+        <div class="form-group"><label>Suffix (optional)</label><input name="suffix" /></div>
+        <div class="form-group"><label>Section</label>
+          <select name="section" id="editSectionSelect">
+            <option value="">(Select section)</option>
+          </select>
+        </div>
         <div class="form-actions">
           <button type="button" id="cancelEditBtn" class="cancel-btn">Cancel</button>
           <button type="submit" class="save-btn">Save Changes</button>
         </div>
       </form>
     </div>
+
+    <!-- Sections Management Modal -->
+    <div id="sectionsModal" class="modal">
+      <form id="sectionsForm">
+        <h3>Manage Sections</h3>
+        <div style="margin-bottom:10px;">
+          <input id="newSectionName" placeholder="New section name" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;" />
+          <div style="display:flex; gap:8px; margin-top:8px; justify-content:flex-end;">
+            <button type="button" class="cancel-btn" onclick="closeSectionsModal()">Close</button>
+            <button type="button" class="save-btn" onclick="addSection()">Add Section</button>
+          </div>
+        </div>
+        <div id="sectionsList" style="max-height:320px; overflow:auto; border-top:1px solid #eee; padding-top:8px;"></div>
+      </form>
+    </div>
+    
+    <!-- Excel Batch Upload Modal -->
+    <div id="excelBatchUploadModal" class="modal">
+      <form id="excelBatchUploadForm">
+        <h3>Batch Upload from Excel/CSV</h3>
+        <div class="form-group">
+          <label>Spreadsheet file (.xlsx, .xls, .csv)</label>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input id="excelFileInput" type="file" accept=".csv, .xlsx, .xls" required style="display:none" />
+            <button type="button" id="excelChooseBtn" class="save-btn" style="padding:6px 12px; background:#fff; color:var(--primary-dark); border:1px solid var(--bg-frame);">Choose file</button>
+            <span id="excelFileName" style="color:#444; font-size:0.95rem;">No file chosen</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Mode</label>
+          <select id="excelUploadMode">
+            <option value="create_or_update">Create or Update (default)</option>
+            <option value="update_only">Update existing only</option>
+            <option value="create_only">Create only</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Defaults for new users</label>
+          <input id="defaultRole" placeholder="role (student|teacher|admin)" value="student" />
+          <small style="color:#666">Provide default role if creating users. Number and password will be generated if missing.</small>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="cancel-btn" onclick="closeExcelBatchModal()">Cancel</button>
+          <button type="submit" class="save-btn">Start Import</button>
+        </div>
+        <div id="excelBatchProgress" style="margin-top:12px; color:#333"></div>
+      </form>
+    </div>
+    
+    <!-- Confirm Delete / Archive Modal -->
+    <div id="confirmDeleteModal" class="modal">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <h3>Confirm Deletion</h3>
+        <div style="margin-top:8px; color:#333">Are you sure you want to delete this user? This will archive the user's data so it can be restored later.</div>
+        <div class="form-actions" style="justify-content:center; margin-top:16px;">
+          <button type="button" id="cancelConfirmDeleteBtn" class="cancel-btn">Cancel</button>
+          <button type="button" id="confirmDeleteBtn" class="delete-btn">Delete &amp; Archive</button>
+        </div>
+      </div>
+    </div>
+    
 
     <div class="table-container">
       <table id="userTable">
@@ -334,7 +523,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyADVdmyzhrewkr2-AjV15NwdAqrfhw2TaY",
@@ -350,6 +539,12 @@
     const db = getFirestore(app);
     let currentRole = "student";
     let currentEditId = null;
+  // Users table pagination state
+  window._userPage = 1;
+  window._usersPerPage = 5;
+  // Sections modal pagination state
+  window._sectionsPage = 1;
+  window._sectionsPerPage = 7;
 
     const showToast = (msg, type="success") => {
       const container = document.getElementById("toastContainer");
@@ -364,7 +559,6 @@
       setTimeout(() => t.remove(), 3000);
     };
 
-    // Role buttons
     const studentBtn = document.getElementById("studentBtn");
     const teacherBtn = document.getElementById("teacherBtn");
     studentBtn.onclick = () => { currentRole = "student"; toggleRoleButtons(); renderTableHeader(); fetchAndRenderUsers(); };
@@ -373,19 +567,21 @@
     function toggleRoleButtons() {
       studentBtn.classList.toggle("active", currentRole === "student");
       teacherBtn.classList.toggle("active", currentRole === "teacher");
+      // show Manage Sections only for teachers
+      try {
+        const manageBtn = document.getElementById('manageSectionsBtn');
+        if (manageBtn) manageBtn.style.display = (currentRole === 'teacher') ? '' : 'none';
+      } catch (e) { console.warn('toggleRoleButtons manageBtn handling failed', e); }
     }
 
-    // Modal helpers
     const showAddUserForm = () => document.getElementById("addUserModal").classList.add("show");
     const hideAddUserForm = () => document.getElementById("addUserModal").classList.remove("show");
     const showEditUserForm = () => document.getElementById("editUserModal").classList.add("show");
     const hideEditUserForm = () => document.getElementById("editUserModal").classList.remove("show");
 
-    // Expose for button onclick
     window.showAddUserForm = showAddUserForm;
     window.hideAddUserForm = hideAddUserForm;
 
-    // Close modals on backdrop click or Esc
     document.getElementById("addUserModal").addEventListener("click", (e) => {
       if (e.target.id === "addUserModal") hideAddUserForm();
     });
@@ -396,19 +592,16 @@
       if (e.key === "Escape") { hideAddUserForm(); hideEditUserForm(); }
     });
 
-    // Cancel edit
     document.getElementById("cancelEditBtn").onclick = () => hideEditUserForm();
 
-    // Dynamic header
     function renderTableHeader() {
       const thead = document.querySelector("#userTable thead tr");
       thead.innerHTML =
         currentRole === "teacher"
-          ? `<th>Last Name</th><th>First Name</th><th>M.I.</th><th>Email</th><th>Subject</th><th>Section</th><th>ID</th><th>Password</th><th>Status</th><th>Actions</th>`
-          : `<th>Last Name</th><th>First Name</th><th>M.I.</th><th>Section</th><th>ID</th><th>Password</th><th>Status</th><th>Actions</th>`;
+          ? `<th>Last Name</th><th>First Name</th><th>M.I.</th><th>Suffix</th><th>Section</th><th>Email</th><th>Subject</th><th>ID</th><th>Password</th><th>Status</th><th>Actions</th>`
+          : `<th>Last Name</th><th>First Name</th><th>M.I.</th><th>Suffix</th><th>Section</th><th>ID</th><th>Password</th><th>Status</th><th>Actions</th>`;
     }
 
-    // Add user
     document.getElementById("addUserForm").onsubmit = async (e) => {
       e.preventDefault();
       const f = e.target;
@@ -416,13 +609,16 @@
         last: f.last.value.trim(),
         first: f.first.value.trim(),
         mi: f.mi.value.trim(),
+        suffix: f.suffix.value?.trim() || '',
         section: f.section.value.trim(),
         email: f.email.value?.trim() || "",
         subject: f.subject.value?.trim() || "",
         number: (currentRole === "student" ? "S" : "T") + Math.floor(100000 + Math.random() * 900000),
         password: Math.random().toString(36).slice(-8),
         active: true,
-        role: currentRole
+        role: currentRole,
+        isInitialPasswordSet: false
+
       };
       try {
         await addDoc(collection(db, "users"), newUser);
@@ -436,63 +632,289 @@
       }
     };
 
-    // Fetch & render
-    async function fetchAndRenderUsers() {
-      const tbody = document.getElementById("userTableBody");
-      tbody.innerHTML = "<tr><td colspan='10'>Loading...</td></tr>";
+    // Sections modal functions
+  window.openSectionsModal = function() { document.getElementById('sectionsModal').classList.add('show'); window._sectionsPage = 1; loadSections(); };
+    window.closeSectionsModal = function() { document.getElementById('sectionsModal').classList.remove('show'); };
+
+    async function loadSections() {
       try {
-        const qy = query(collection(db, "users"), where("role", "==", currentRole));
-        const snap = await getDocs(qy);
-        tbody.innerHTML = "";
-        snap.forEach((docSnap) => {
-          const u = docSnap.data();
-          const row = document.createElement("tr");
-          row.innerHTML =
-            currentRole === "teacher"
-              ? `
-                <td>${u.last}</td>
-                <td>${u.first}</td>
-                <td>${u.mi || ""}</td>
-                <td>${u.email || ""}</td>
-                <td>${u.subject || ""}</td>
-                <td>${u.section || ""}</td>
-                <td>${u.number}</td>
-                <td>${u.password}</td>
-                <td>${u.active ? "Active" : "Inactive"}</td>
-                <td>
-                  <button class="edit-btn" onclick="editUser('${docSnap.id}')">Edit</button>
-                  <button class="deactivate-btn" onclick="toggleStatus('${docSnap.id}', ${!u.active})">${u.active ? "Deactivate" : "Activate"}</button>
-                  <button class="delete-btn" onclick="deleteUser('${docSnap.id}')">Delete</button>
-                </td>`
-              : `
-                <td>${u.last}</td>
-                <td>${u.first}</td>
-                <td>${u.mi || ""}</td>
-                <td>${u.section || ""}</td>
-                <td>${u.number}</td>
-                <td>${u.password}</td>
-                <td>${u.active ? "Active" : "Inactive"}</td>
-                <td>
-                  <button class="edit-btn" onclick="editUser('${docSnap.id}')">Edit</button>
-                  <button class="deactivate-btn" onclick="toggleStatus('${docSnap.id}', ${!u.active})">${u.active ? "Deactivate" : "Activate"}</button>
-                  <button class="delete-btn" onclick="deleteUser('${docSnap.id}')">Delete</button>
-                </td>`;
-          tbody.appendChild(row);
-        });
-        if (!tbody.children.length) {
-          tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:16px;">No users found.</td></tr>`;
+        const listEl = document.getElementById('sectionsList');
+        listEl.innerHTML = '<div>Loading...</div>';
+        // fetch canonical sections and users (to derive any sections present in user records)
+        const [snap, usersSnap] = await Promise.all([
+          getDocs(collection(db, 'sections')),
+          getDocs(collection(db, 'users'))
+        ]);
+
+        // map of sectionId -> name for canonical sections
+        const canonical = {};
+        if (snap && snap.size) {
+          snap.forEach(s => { canonical[s.id] = (s.data().name || '').trim(); });
         }
-      } catch (err) {
-        console.error(err);
-        tbody.innerHTML = `<tr><td colspan="10" style="color:var(--error);">Failed to load users.</td></tr>`;
-      }
+
+        // derive sections from users
+        const derived = new Set();
+        if (usersSnap && usersSnap.size) {
+          usersSnap.forEach(u => {
+            const s = (u.data().section || '').trim();
+            if (s) derived.add(s);
+          });
+        }
+
+        // union of canonical names and derived names
+        const allNames = new Set(Object.values(canonical).filter(Boolean));
+        derived.forEach(n => allNames.add(n));
+        const arr = Array.from(allNames).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+        if (!arr.length) { listEl.innerHTML = '<div style="color:#666">No sections found. Add one above.</div>'; // remove any existing pager
+          const oldPager = document.getElementById('sectionsPagination'); if (oldPager) oldPager.remove();
+          return; }
+        listEl.innerHTML = '';
+
+        // pagination: show only a page of rows
+        const perPage = window._sectionsPerPage || 7;
+        const totalPages = Math.max(1, Math.ceil(arr.length / perPage));
+        if (!window._sectionsPage || window._sectionsPage < 1) window._sectionsPage = 1;
+        if (window._sectionsPage > totalPages) window._sectionsPage = totalPages;
+        const startIdx = (window._sectionsPage - 1) * perPage;
+        const pageSlice = arr.slice(startIdx, startIdx + perPage);
+
+        // helper to find canonical id by name
+        const findIdByName = (name) => {
+          for (const k in canonical) {
+            if ((canonical[k] || '').trim() === name) return k;
+          }
+          return null;
+        };
+
+  pageSlice.forEach(nameStr => {
+          const row = document.createElement('div');
+          row.style.display = 'flex'; row.style.justifyContent = 'space-between'; row.style.alignItems = 'center'; row.style.padding = '6px 0';
+          const name = document.createElement('div'); name.textContent = nameStr; name.style.flex = '1';
+          const actions = document.createElement('div'); actions.style.display = 'flex'; actions.style.gap = '6px';
+
+          const existingId = findIdByName(nameStr);
+          if (existingId) {
+            const editBtn = document.createElement('button'); editBtn.type = 'button'; editBtn.textContent = 'Edit'; editBtn.className = 'save-btn'; editBtn.style.padding = '6px 8px';
+            const delBtn = document.createElement('button'); delBtn.type = 'button'; delBtn.textContent = 'Delete'; delBtn.className = 'cancel-btn'; delBtn.style.padding = '6px 8px';
+            // use robust handlers to surface errors and refresh UI
+            editBtn.onclick = () => { window.renameSection(existingId, nameStr); };
+            delBtn.onclick = () => { window.deleteSection(existingId, nameStr); };
+            actions.appendChild(editBtn); actions.appendChild(delBtn);
+          } else {
+            // derived-only section: show a Save/Add button to persist it into canonical sections
+            const addBtn = document.createElement('button'); addBtn.type = 'button'; addBtn.textContent = 'Save'; addBtn.className = 'save-btn'; addBtn.style.padding = '6px 8px';
+            addBtn.onclick = async () => {
+              addBtn.disabled = true;
+              try {
+                const id = nameStr.replace(/[^a-z0-9]+/ig, '_').toLowerCase();
+                await setDoc(doc(db, 'sections', id), { name: nameStr });
+                showToast('Section saved.');
+                await loadSections();
+                await fetchAndRenderUsers();
+              } catch (e) {
+                console.error('save derived section failed', e);
+                showToast('Failed to save section.', 'error');
+                alert('Save failed: ' + (e && e.message ? e.message : e));
+              } finally {
+                addBtn.disabled = false;
+              }
+            };
+            const badge = document.createElement('span'); badge.textContent = 'derived'; badge.style.marginRight = '8px'; badge.style.color = '#666'; badge.style.fontSize = '0.9rem';
+            actions.appendChild(badge); actions.appendChild(addBtn);
+          }
+
+          row.appendChild(name); row.appendChild(actions); listEl.appendChild(row);
+        });
+          // helper functions for rename/delete with better error handling and UI refresh
+          window.renameSection = async function(sectionId, currentName) {
+            try {
+              const newName = prompt('Rename section', currentName || '');
+              if (!newName) return;
+              await updateDoc(doc(db, 'sections', sectionId), { name: newName.trim() });
+              showToast('Section renamed');
+              await loadSections();
+              await fetchAndRenderUsers();
+            } catch (e) {
+              console.error('renameSection failed', e);
+              alert('Update failed: ' + (e && e.message ? e.message : e));
+            }
+          };
+
+          window.deleteSection = async function(sectionId, name) {
+            try {
+              if (!confirm('Delete section "' + (name || sectionId) + '"?')) return;
+              await deleteDoc(doc(db, 'sections', sectionId));
+              showToast('Section deleted', 'warn');
+              // reset to page 1 if current page might now be out of range
+              window._sectionsPage = 1;
+              await loadSections();
+              await fetchAndRenderUsers();
+            } catch (e) {
+              console.error('deleteSection failed', e);
+              alert('Delete failed: ' + (e && e.message ? e.message : e));
+            }
+          };
+
+        // render pagination controls
+        const oldPager = document.getElementById('sectionsPagination'); if (oldPager) oldPager.remove();
+        if (totalPages > 1) {
+          const pager = document.createElement('div'); pager.id = 'sectionsPagination';
+          pager.style.display = 'flex'; pager.style.justifyContent = 'center'; pager.style.alignItems = 'center'; pager.style.gap = '8px'; pager.style.marginTop = '10px';
+          const prev = document.createElement('button'); prev.type = 'button'; prev.textContent = 'Prev'; prev.className = 'cancel-btn'; prev.disabled = window._sectionsPage <= 1;
+          const next = document.createElement('button'); next.type = 'button'; next.textContent = 'Next'; next.className = 'save-btn'; next.disabled = window._sectionsPage >= totalPages;
+          const info = document.createElement('span'); info.textContent = `Page ${window._sectionsPage} of ${totalPages}`; info.style.margin = '0 8px'; info.style.color = '#444';
+          prev.onclick = () => { if (window._sectionsPage > 1) { window._sectionsPage--; loadSections(); } };
+          next.onclick = () => { if (window._sectionsPage < totalPages) { window._sectionsPage++; loadSections(); } };
+          pager.appendChild(prev); pager.appendChild(info); pager.appendChild(next);
+          // insert pager after the list element
+          listEl.parentNode.insertBefore(pager, listEl.nextSibling);
+        }
+      } catch (e) { console.warn('loadSections failed', e); document.getElementById('sectionsList').innerHTML = '<div style="color:#b94b4b">Failed to load sections.</div>'; }
     }
 
-    // Toggle active
-    window.toggleStatus = async (id, newStatus) => {
+    window.addSection = async function() {
+      const v = (document.getElementById('newSectionName').value || '').trim();
+      if (!v) return alert('Enter a section name');
       try {
-        await updateDoc(doc(db, "users", id), { active: newStatus });
-        showToast(newStatus ? "Account activated." : "Account deactivated.", "warn");
+        // Use the name slug as id to prevent duplicates
+        const id = v.replace(/[^a-z0-9]+/ig, '_').toLowerCase();
+        await setDoc(doc(db, 'sections', id), { name: v });
+        document.getElementById('newSectionName').value = '';
+        loadSections();
+        fetchAndRenderUsers();
+      } catch (e) { console.error('addSection failed', e); alert('Add failed'); }
+    }
+
+    async function fetchAndRenderUsers() {
+  const q = query(collection(db, "users"), where("role", "==", currentRole));
+  const qs = await getDocs(q);
+  const tbody = document.getElementById("userTableBody");
+  tbody.innerHTML = "";
+
+  // collect and apply filters first, then paginate the results
+  const allDocs = qs.docs || [];
+  const selectedSection = (document.getElementById('filterSectionSelect')?.value || '').trim();
+  const selectedStatus = (document.getElementById('filterStatusSelect')?.value || 'active').toLowerCase();
+
+  const filteredDocs = allDocs.filter(docSnap => {
+    const u = docSnap.data();
+    if (selectedSection && ((u.section || '').trim() !== selectedSection)) return false;
+    if (selectedStatus === 'active' && !u.active) return false;
+    if (selectedStatus === 'inactive' && !!u.active) return false;
+    return true;
+  });
+
+  const perPage = window._usersPerPage || 7;
+  const totalPages = Math.max(1, Math.ceil(filteredDocs.length / perPage));
+  if (!window._userPage || window._userPage < 1) window._userPage = 1;
+  if (window._userPage > totalPages) window._userPage = totalPages;
+  const startIdx = (window._userPage - 1) * perPage;
+  const pageSlice = filteredDocs.slice(startIdx, startIdx + perPage);
+
+  // render the page slice
+  pageSlice.forEach((docSnap) => {
+    const u = docSnap.data();
+    const row = document.createElement("tr");
+
+    if (currentRole === "teacher") {
+      row.innerHTML = `
+  <td>${u.last || '—'}</td><td>${u.first || '—'}</td><td>${u.mi || '—'}</td><td>${u.suffix || '—'}</td><td>${u.section || '—'}</td><td>${u.email || '—'}</td><td>${u.subject || '—'}</td>
+  <td>${u.number || '—'}</td><td>${u.password || '—'}</td>
+        <td>
+          ${u.active ? "Active" : "Inactive"}
+          <label class="switch" style="margin-left:8px;">
+            <input type="checkbox" ${u.active ? "checked" : ""} onchange="toggleStatus('${docSnap.id}', this.checked)">
+            <span class="slider"></span>
+          </label>
+        </td>
+        <td>
+          <button class="edit-btn" ${u.active ? '' : 'disabled'} onclick="editUser('${docSnap.id}')">Edit</button>
+          <button class="delete-btn" style="margin-left:6px;" onclick="openConfirmDelete('${docSnap.id}')">Delete</button>
+        </td>`;
+    } else {
+      row.innerHTML = `
+  <td>${u.last || '—'}</td><td>${u.first || '—'}</td><td>${u.mi || '—'}</td><td>${u.suffix || '—'}</td><td>${u.section || '—'}</td><td>${u.number || '—'}</td><td>${u.password || '—'}</td>
+        <td>
+          ${u.active ? "Active" : "Inactive"}
+          <label class="switch" style="margin-left:8px;">
+            <input type="checkbox" ${u.active ? "checked" : ""} onchange="toggleStatus('${docSnap.id}', this.checked)">
+            <span class="slider"></span>
+          </label>
+        </td>
+        <td>
+          <button class="edit-btn" ${u.active ? '' : 'disabled'} onclick="editUser('${docSnap.id}')">Edit</button>
+          <button class="delete-btn" style="margin-left:6px;" onclick="openConfirmDelete('${docSnap.id}')">Delete</button>
+        </td>`;
+    }
+    tbody.appendChild(row);
+  });
+
+  // render pagination controls
+  try {
+    const container = document.querySelector('.table-container');
+    let pager = document.getElementById('userPagination');
+    if (!pager) {
+      pager = document.createElement('div'); pager.id = 'userPagination';
+      pager.style.marginTop = '10px'; pager.style.display = 'flex'; pager.style.justifyContent = 'flex-end'; pager.style.gap = '8px';
+      container.appendChild(pager);
+    }
+    pager.innerHTML = '';
+    const prev = document.createElement('button'); prev.type = 'button'; prev.className = 'cancel-btn'; prev.textContent = 'Prev'; prev.disabled = window._userPage <= 1;
+    const next = document.createElement('button'); next.type = 'button'; next.className = 'save-btn'; next.textContent = 'Next'; next.disabled = window._userPage >= totalPages;
+    const info = document.createElement('span'); info.textContent = `Page ${window._userPage} of ${totalPages}`; info.style.alignSelf = 'center'; info.style.margin = '0 8px'; info.style.color = '#444';
+    prev.onclick = () => { if (window._userPage > 1) { window._userPage--; fetchAndRenderUsers(); } };
+    next.onclick = () => { if (window._userPage < totalPages) { window._userPage++; fetchAndRenderUsers(); } };
+    pager.appendChild(prev);
+    // page number buttons (if few pages)
+    if (totalPages <= 8) {
+      for (let p = 1; p <= totalPages; p++) {
+        const b = document.createElement('button'); b.type = 'button'; b.textContent = p; b.style.minWidth = '34px'; b.style.padding = '6px 8px'; b.onclick = (() => { const page = p; return () => { window._userPage = page; fetchAndRenderUsers(); }; })();
+        if (p === window._userPage) { b.className = 'save-btn'; } else { b.className = 'cancel-btn'; }
+        pager.appendChild(b);
+      }
+    } else {
+      pager.appendChild(info);
+    }
+    pager.appendChild(next);
+  } catch (e) { console.warn('render pagination failed', e); }
+  // Build set of sections found in users (fallback) and try to populate selects from `sections` collection first
+  try {
+    const derived = Array.from(new Set(qs.docs.map(d => (d.data().section || '').trim()).filter(s => s)) ).sort();
+    (async function tryPopulate() {
+      try {
+        const snap = await getDocs(collection(db, 'sections'));
+        let sectionsArr = derived;
+        if (snap && snap.size) {
+          sectionsArr = snap.docs.map(d => (d.data().name || '').trim()).filter(Boolean).sort();
+        }
+        function populateSelect(id, sectionsList) {
+          const sel = document.getElementById(id);
+          if (!sel) return;
+          const prev = sel.value;
+          sel.innerHTML = '<option value="">(Select section)</option>' + sectionsList.map(s => `<option value="${s}">${s}</option>`).join('');
+          if (prev) sel.value = prev;
+        }
+        populateSelect('addSectionSelect', sectionsArr);
+        populateSelect('editSectionSelect', sectionsArr);
+        // populate filter select with an "All sections" option
+        try {
+          const filter = document.getElementById('filterSectionSelect');
+          if (filter) {
+            const prevf = filter.value;
+            filter.innerHTML = '<option value="">(All sections)</option>' + sectionsArr.map(s => `<option value="${s}">${s}</option>`).join('');
+            if (prevf) filter.value = prevf;
+          }
+        } catch (e) { console.warn('populate filter failed', e); }
+      } catch (e) { console.warn('tryPopulate sections failed', e); }
+    })();
+  } catch (e) { console.warn('populate section selects failed', e); }
+}
+
+    window.toggleStatus = async (id, active) => {
+      try {
+        await updateDoc(doc(db, "users", id), { active });
+        showToast(`User ${active ? "activated" : "deactivated"}.`);
         fetchAndRenderUsers();
       } catch (err) {
         console.error(err);
@@ -500,12 +922,11 @@
       }
     };
 
-    // Delete
     window.deleteUser = async (id) => {
-      if (!confirm("Delete this user?")) return;
+      if (!confirm("Are you sure you want to delete this user?")) return;
       try {
         await deleteDoc(doc(db, "users", id));
-        showToast("User deleted.", "warn");
+        showToast("🗑️ User deleted.");
         fetchAndRenderUsers();
       } catch (err) {
         console.error(err);
@@ -513,39 +934,39 @@
       }
     };
 
-    // Edit flow
     window.editUser = async (id) => {
       try {
-        const docRef = doc(db, "users", id);
-        const snap = await getDoc(docRef);
-        if (!snap.exists()) return showToast("User not found.", "error");
-        const u = snap.data();
+        const docSnap = await getDoc(doc(db, "users", id));
+        if (!docSnap.exists()) return showToast("User not found", "error");
+        const u = docSnap.data();
+        const form = document.getElementById("editUserForm");
+        form.last.value = u.last;
+        form.first.value = u.first;
+        form.mi.value = u.mi;
+        form.suffix.value = u.suffix || '';
+        // set section select (will be populated by fetchAndRenderUsers)
+        form.section.value = u.section;
         currentEditId = id;
-
-        const f = document.getElementById("editUserForm");
-        f.last.value = u.last || "";
-        f.first.value = u.first || "";
-        f.mi.value = u.mi || "";
-        f.section.value = u.section || "";
         showEditUserForm();
       } catch (err) {
         console.error(err);
-        showToast("Failed to load user.", "error");
+        showToast("Error loading user.", "error");
       }
     };
 
     document.getElementById("editUserForm").onsubmit = async (e) => {
       e.preventDefault();
       const f = e.target;
-      const updates = {
-        last: f.last.value.trim(),
-        first: f.first.value.trim(),
-        mi: f.mi.value.trim(),
-        section: f.section.value.trim(),
-      };
+      if (!currentEditId) return;
       try {
-        await updateDoc(doc(db, "users", currentEditId), updates);
-        showToast("User info updated!");
+        await updateDoc(doc(db, "users", currentEditId), {
+          last: f.last.value.trim(),
+          first: f.first.value.trim(),
+          mi: f.mi.value.trim(),
+          suffix: f.suffix.value?.trim() || '',
+          section: f.section.value.trim()
+        });
+        showToast("✅ User updated!");
         hideEditUserForm();
         fetchAndRenderUsers();
       } catch (err) {
@@ -554,9 +975,503 @@
       }
     };
 
-    // Initial load
-    renderTableHeader();
-    fetchAndRenderUsers();
+  // ensure initial visibility of role-controlled UI
+  toggleRoleButtons();
+  renderTableHeader();
+  fetchAndRenderUsers();
+    const filterEl = document.getElementById('filterSectionSelect');
+    if (filterEl) filterEl.addEventListener('change', fetchAndRenderUsers);
+    const statusFilterEl = document.getElementById('filterStatusSelect');
+    if (statusFilterEl) statusFilterEl.addEventListener('change', fetchAndRenderUsers);
+
+  // Load SheetJS library dynamically when needed and export users to Excel
+  function loadSheetJs() {
+    return new Promise((resolve, reject) => {
+      if (window.XLSX) return resolve(window.XLSX);
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      s.onload = () => {
+        if (window.XLSX) resolve(window.XLSX); else reject(new Error('XLSX not available after load'));
+      };
+      s.onerror = (e) => reject(e || new Error('Failed to load SheetJS'));
+      document.head.appendChild(s);
+    });
+  }
+
+  window.exportUsersToExcel = async function() {
+    try {
+      showToast('Preparing Excel...');
+      await loadSheetJs();
+      // query users by currentRole and respect filters
+      const selectedSection = (document.getElementById('filterSectionSelect')?.value || '').trim();
+      const selectedStatus = (document.getElementById('filterStatusSelect')?.value || 'active').toLowerCase();
+      const q = query(collection(db, 'users'), where('role', '==', currentRole));
+      const qs = await getDocs(q);
+      const rows = [];
+      qs.forEach(d => {
+        const u = d.data();
+        if (selectedSection && ((u.section || '').trim() !== selectedSection)) return;
+        if (selectedStatus === 'active' && !u.active) return;
+        if (selectedStatus === 'inactive' && !!u.active) return;
+        const row = {
+          active: u.active ? 'TRUE' : 'FALSE',
+          first: u.first || '',
+          last: u.last || '',
+        };
+        // Use bracket keys for headers with punctuation
+        row['M.I'] = u.mi || '';
+        row['Suffix'] = u.suffix || '';
+        row['role'] = u.role || '';
+        row['email'] = u.email || '';
+        row['section'] = u.section || '';
+        row['subject'] = u.subject || '';
+        row['r'] = u.r || '';
+        rows.push(row);
+      });
+
+      if (!rows.length) { showToast('No records to export', 'warn'); return; }
+
+      // Build worksheet using SheetJS
+      const headerOrder = ['active','first','last','M.I','Suffix','role','email','section','subject','r'];
+      const ws = window.XLSX.utils.json_to_sheet(rows, {header: headerOrder});
+      const wb = window.XLSX.utils.book_new();
+      window.XLSX.utils.book_append_sheet(wb, ws, 'Users');
+      const wbout = window.XLSX.write(wb, {bookType: 'xlsx', type: 'array'});
+      const blob = new Blob([wbout], {type: 'application/octet-stream'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const date = new Date().toISOString().slice(0,10);
+      a.download = `users_${currentRole}_${date}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast('Excel file ready');
+    } catch (e) {
+      console.error('exportUsersToExcel failed', e);
+      showToast('Export failed', 'error');
+      alert('Export failed: ' + (e && e.message ? e.message : e));
+    }
+  };
+
+  // wire the Export button
+  try { const expBtn = document.getElementById('exportExcelBtn'); if (expBtn) expBtn.onclick = () => window.exportUsersToExcel(); } catch (e) { console.warn('export button wiring failed', e); }
+  // wire the Upload Excel button
+  try { const upBtn = document.getElementById('excelBatchUploadBtn'); if (upBtn) upBtn.onclick = () => window.openExcelBatchModal(); } catch (e) { console.warn('excelBatchUploadBtn wiring failed', e); }
+  // wire the Show Archived toggle and implement archived fetch/restore/delete functions
+  try {
+    // archived view state
+    window._showArchived = false;
+
+    // toggle function (safe, idempotent)
+    window.toggleArchivedView = function() {
+      try {
+        const archBtn = document.getElementById('showArchivedBtn');
+        window._showArchived = !window._showArchived;
+        if (archBtn) { archBtn.textContent = window._showArchived ? 'Hide Archived' : 'Show Archived'; archBtn.disabled = true; }
+        // reset to first page when toggling
+        window._userPage = 1;
+        if (window._showArchived) {
+          const tbody = document.getElementById('userTableBody'); if (tbody) tbody.innerHTML = '<tr><td colspan="11">Loading archived users…</td></tr>';
+          fetchAndRenderArchived().finally(() => { if (archBtn) archBtn.disabled = false; });
+        } else {
+          const tbody = document.getElementById('userTableBody'); if (tbody) tbody.innerHTML = '<tr><td colspan="11">Loading users…</td></tr>';
+          fetchAndRenderUsers().finally(() => { if (archBtn) archBtn.disabled = false; });
+        }
+      } catch (err) { console.error('toggleArchivedView error', err); if (document.getElementById('showArchivedBtn')) document.getElementById('showArchivedBtn').disabled=false; }
+    };
+
+    const archBtn = document.getElementById('showArchivedBtn');
+    if (archBtn) {
+      // wire a single click handler to avoid double-invocation
+      archBtn.onclick = () => window.toggleArchivedView();
+    }
+
+    // fetch archived users and render into the same table used for active users
+    async function fetchAndRenderArchived() {
+      try {
+        const qs = await getDocs(collection(db, 'archived_users'));
+        const tbody = document.getElementById('userTableBody'); if (!tbody) return;
+        tbody.innerHTML = '';
+        const docs = qs.docs || [];
+        // filter by currentRole to match active view
+        const filtered = docs.filter(d => (d.data().role || '') === currentRole);
+        filtered.forEach(docSnap => {
+          const u = docSnap.data();
+          const row = document.createElement('tr');
+          if (currentRole === 'teacher') {
+            row.innerHTML = `\n  <td>${u.last || '—'}</td><td>${u.first || '—'}</td><td>${u.mi || '—'}</td><td>${u.suffix || '—'}</td><td>${u.section || '—'}</td><td>${u.email || '—'}</td><td>${u.subject || '—'}</td>\n  <td>${u.number || '—'}</td><td>${u.password || '—'}</td>\n        <td>Archived</td>\n        <td>\n          <button class="save-btn" onclick="restoreArchived('${docSnap.id}')">Restore</button>\n          <button class="delete-btn" onclick="permanentlyDeleteArchived('${docSnap.id}')">Delete</button>\n        </td>`;
+          } else {
+            row.innerHTML = `\n  <td>${u.last || '—'}</td><td>${u.first || '—'}</td><td>${u.mi || '—'}</td><td>${u.suffix || '—'}</td><td>${u.section || '—'}</td><td>${u.number || '—'}</td><td>${u.password || '—'}</td>\n        <td>Archived</td>\n        <td>\n          <button class="save-btn" onclick="restoreArchived('${docSnap.id}')">Restore</button>\n          <button class="delete-btn" onclick="permanentlyDeleteArchived('${docSnap.id}')">Delete</button>\n        </td>`;
+          }
+          tbody.appendChild(row);
+        });
+        try { renderTableHeader(); } catch (e) { /* ignore */ }
+      } catch (e) { console.error('fetchAndRenderArchived failed', e); showToast('Failed to load archived users.', 'error'); }
+    }
+
+    // Open confirm-delete modal and set target id
+    window.openConfirmDelete = function(id) {
+      window._deleteTargetId = id;
+      const m = document.getElementById('confirmDeleteModal'); if (m) m.classList.add('show');
+    };
+
+    document.getElementById('cancelConfirmDeleteBtn').onclick = function() {
+      const m = document.getElementById('confirmDeleteModal'); if (m) m.classList.remove('show');
+      window._deleteTargetId = null;
+    };
+
+    document.getElementById('confirmDeleteBtn').onclick = async function() {
+      const id = window._deleteTargetId; if (!id) return;
+      const m = document.getElementById('confirmDeleteModal'); if (m) m.classList.remove('show');
+      window._deleteTargetId = null;
+      await archiveUserById(id);
+    };
+
+    // Archive the user (move to archived_users then remove from users)
+    async function archiveUserById(id) {
+      try {
+        const docSnap = await getDoc(doc(db, 'users', id));
+        if (!docSnap.exists()) return showToast('User not found', 'error');
+        const data = docSnap.data();
+        data.archivedAt = new Date().toISOString();
+        data.originalId = id;
+        await addDoc(collection(db, 'archived_users'), data);
+        await deleteDoc(doc(db, 'users', id));
+        showToast('User archived');
+        fetchAndRenderUsers();
+      } catch (err) {
+        console.error('archive failed', err);
+        showToast('Failed to archive user', 'error');
+      }
+    }
+
+    // restore archived record (simple add then delete archived)
+    window.restoreArchived = async function(archId) {
+      try {
+        const snap = await getDoc(doc(db, 'archived_users', archId));
+        if (!snap.exists()) return showToast('Archived record not found', 'error');
+        const data = snap.data();
+        delete data.archivedAt; delete data.originalId;
+        await addDoc(collection(db, 'users'), data);
+        await deleteDoc(doc(db, 'archived_users', archId));
+        showToast('User restored');
+        fetchAndRenderArchived();
+      } catch (e) { console.error('restore failed', e); showToast('Restore failed', 'error'); }
+    };
+
+    window.permanentlyDeleteArchived = async function(archId) {
+      try {
+        // show native confirm for now, or you can replace with modal
+        if (!confirm('Permanently delete this archived user? This cannot be undone.')) return;
+        await deleteDoc(doc(db, 'archived_users', archId));
+        showToast('Archived user permanently deleted', 'warn');
+        fetchAndRenderArchived();
+      } catch (e) { console.error('permanent delete failed', e); showToast('Delete failed', 'error'); }
+    };
+  } catch (e) { console.warn('showArchived wiring failed', e); }
+  
+
+  // Excel batch modal controls (hide mode/default-role UI instead of disabling)
+  window.openExcelBatchModal = function() {
+    const modeEl = document.getElementById('excelUploadMode');
+    const defaultRoleEl = document.getElementById('defaultRole');
+    try {
+      if (modeEl) {
+        modeEl.value = 'create_or_update';
+        // hide the surrounding form-group instead of disabling
+        if (modeEl.parentNode) modeEl.parentNode.style.display = 'none';
+      }
+      if (defaultRoleEl) {
+        defaultRoleEl.value = currentRole || 'student';
+        if (defaultRoleEl.parentNode) defaultRoleEl.parentNode.style.display = 'none';
+      }
+    } catch (e) { console.warn('could not set modal defaults', e); }
+    document.getElementById('excelBatchUploadModal').classList.add('show');
+  }
+  window.closeExcelBatchModal = function() {
+    document.getElementById('excelBatchUploadModal').classList.remove('show');
+    try {
+      const modeEl = document.getElementById('excelUploadMode');
+      const defaultRoleEl = document.getElementById('defaultRole');
+      document.getElementById('excelBatchUploadForm').reset();
+      if (modeEl && modeEl.parentNode) modeEl.parentNode.style.display = '';
+      if (defaultRoleEl && defaultRoleEl.parentNode) defaultRoleEl.parentNode.style.display = '';
+    } catch (e) { /* ignore */ }
+    document.getElementById('excelBatchProgress').textContent = '';
+  }
+
+  // helper: normalize row keys to lowercase trimmed names
+  function normalizeRowKeys(row) {
+    const out = {};
+    for (const k in row) {
+      out[k.trim().toLowerCase()] = row[k];
+    }
+    return out;
+  }
+
+  document.getElementById('excelBatchUploadForm').onsubmit = async function(e) {
+    e.preventDefault();
+    const file = document.getElementById('excelFileInput').files[0];
+    if (!file) return alert('Select a spreadsheet file.');
+    const mode = document.getElementById('excelUploadMode').value;
+    const defaultRole = (document.getElementById('defaultRole').value || 'student').trim();
+    const progressEl = document.getElementById('excelBatchProgress');
+    progressEl.textContent = 'Reading file for preview...';
+    try {
+      await loadSheetJs();
+      const arr = await file.arrayBuffer();
+      const workbook = window.XLSX.read(arr, { type: 'array' });
+      const first = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[first];
+      let rows = window.XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      if (!rows || !rows.length) { progressEl.textContent = 'No rows found in spreadsheet.'; return; }
+      // remove fully-empty rows
+      rows = rows.filter(r => Object.values(r).some(v => String(v || '').trim() !== ''));
+      if (!rows.length) { progressEl.textContent = 'No non-empty rows found in spreadsheet.'; return; }
+
+      // Build users map (email, number, and name+section) to improve matching and avoid duplicates
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const usersByEmail = {};
+      const usersByNumber = {};
+      const usersByNameSec = {}; // key: `${first}|${last}|${section}`
+      function normalizeEmail(s) { if (!s) return ''; return String(s || '').replace(/\uFEFF|\u00A0|\u200B/g, '').trim().toLowerCase(); }
+      function normStr(s) { return String(s || '').replace(/\uFEFF|\u00A0|\u200B/g, '').trim().toLowerCase(); }
+      usersSnap.forEach(d => { const u = d.data(); if (!u) return; const id = d.id; const e = normalizeEmail(u.email); if (e) usersByEmail[e] = { id, data: u }; if (u.number) usersByNumber[String(u.number).trim()] = { id, data: u }; const nameKey = `${normStr(u.first)}|${normStr(u.last)}|${normStr(u.section)}`; if (nameKey && nameKey !== '||') usersByNameSec[nameKey] = { id, data: u }; });
+
+      // helper to find existing user by multiple heuristics
+      function findExistingForRow(r) {
+        const targetRole = (r['role'] || currentRole || '').toString().trim().toLowerCase();
+        const email = normalizeEmail(r['email'] || r['e-mail'] || '');
+        if (email && usersByEmail[email] && String((usersByEmail[email].data && usersByEmail[email].data.role) || '').toLowerCase() === targetRole) return { match: 'email', user: usersByEmail[email] };
+        const number = (r['number'] || '').toString().trim();
+        if (number && usersByNumber[number] && String((usersByNumber[number].data && usersByNumber[number].data.role) || '').toLowerCase() === targetRole) return { match: 'number', user: usersByNumber[number] };
+        const nameKey = `${normStr(r['first'])}|${normStr(r['last'])}|${normStr(r['section'])}`;
+        if (nameKey && usersByNameSec[nameKey] && String((usersByNameSec[nameKey].data && usersByNameSec[nameKey].data.role) || '').toLowerCase() === targetRole) return { match: 'name_section', user: usersByNameSec[nameKey] };
+        return null;
+      }
+
+      // build preview rows
+      const previewRows = rows.map((raw, idx) => {
+        const r = normalizeRowKeys(raw);
+        const found = findExistingForRow(r);
+        const email = normalizeEmail(r['email'] || r['e-mail'] || '');
+        const willUpdate = !!found;
+        const action = willUpdate ? `will-update (${found.match})` : 'will-create';
+        return { index: idx+1, raw, norm: r, email, action, match: found ? found.match : null, targetId: found ? found.user.id : null };
+      });
+
+      // detect preview conflicts: multiple rows targeting the same existing doc id
+      const targetCount = {};
+      previewRows.forEach(pr => { if (pr.targetId) targetCount[pr.targetId] = (targetCount[pr.targetId] || 0) + 1; });
+      const conflicts = Object.keys(targetCount).filter(k => targetCount[k] > 1);
+
+      // render preview table in progressEl inside a scrollable container
+      progressEl.innerHTML = '';
+      const container = document.createElement('div'); container.className = 'excel-preview';
+      const tbl = document.createElement('table'); tbl.className = 'excel-preview-table';
+      const thead = document.createElement('thead'); thead.innerHTML = '<tr style="background:#eee"><th style="width:40px">#</th><th style="width:140px">Email</th><th>First</th><th>Last</th><th style="width:140px">Action</th></tr>';
+      tbl.appendChild(thead);
+      const tb = document.createElement('tbody');
+      previewRows.forEach(pr => {
+        const tr = document.createElement('tr');
+        // highlight rows that target an existing doc that is also targeted by other rows
+        const isConflictTarget = pr.targetId && (targetCount[pr.targetId] > 1);
+        tr.style.background = isConflictTarget ? '#fff3cd' : '';
+        const targetNote = isConflictTarget ? ' ⚠️' : '';
+        tr.innerHTML = `<td>${pr.index}</td><td>${(pr.email||'—')}</td><td>${(pr.norm['first']||'').toString()}</td><td>${(pr.norm['last']||'').toString()}</td><td>${pr.action}${targetNote}</td>`;
+        tb.appendChild(tr);
+      });
+      tbl.appendChild(tb);
+      container.appendChild(tbl);
+      progressEl.appendChild(container);
+
+
+      const btnRow = document.createElement('div'); btnRow.style.display='flex'; btnRow.style.flexDirection='column'; btnRow.style.gap='8px'; btnRow.style.marginTop='8px';
+      const controls = document.createElement('div'); controls.style.display='flex'; controls.style.gap='8px';
+      const applyBtn = document.createElement('button'); applyBtn.className='save-btn'; applyBtn.textContent = 'Apply Import';
+      const cancelBtn = document.createElement('button'); cancelBtn.className='cancel-btn'; cancelBtn.textContent='Cancel Preview';
+
+      // override checkbox to allow multiple updates to the same user
+      const allowBoxRow = document.createElement('div'); allowBoxRow.style.display='flex'; allowBoxRow.style.alignItems='center'; allowBoxRow.style.gap='8px';
+      const allowCheckbox = document.createElement('input'); allowCheckbox.type = 'checkbox'; allowCheckbox.id = 'allowMultiUpdate';
+      const allowLabel = document.createElement('label'); allowLabel.htmlFor = 'allowMultiUpdate'; allowLabel.textContent = 'Allow multiple rows to update the same existing user (may merge data)'; allowLabel.style.fontSize = '0.9rem';
+      allowBoxRow.appendChild(allowCheckbox); allowBoxRow.appendChild(allowLabel);
+
+      // if there are conflicts, show a warning and disable apply until checkbox is ticked
+      if (conflicts.length) {
+        const warn = document.createElement('div'); warn.style.color = 'var(--warn)'; warn.style.fontWeight = '700'; warn.style.marginBottom = '4px';
+        warn.textContent = `Warning: ${conflicts.length} existing user(s) would be updated by multiple rows. This will merge those rows into the same account.`;
+        btnRow.appendChild(warn);
+        applyBtn.disabled = true;
+        allowCheckbox.onchange = () => { applyBtn.disabled = !allowCheckbox.checked; };
+      }
+
+      controls.appendChild(cancelBtn); controls.appendChild(applyBtn);
+      btnRow.appendChild(controls); btnRow.appendChild(allowBoxRow);
+      progressEl.appendChild(btnRow);
+
+      cancelBtn.onclick = () => { progressEl.textContent = ''; }; 
+      applyBtn.onclick = async () => { applyBtn.disabled=true; cancelBtn.disabled=true; progressEl.textContent = 'Applying import...'; await performImportFromPreview(previewRows, mode, defaultRole); };
+
+      // store previewRows for potential later use
+      window._excelPreviewRows = previewRows;
+    } catch (e) {
+      console.error('Excel preview failed', e);
+      alert('Preview failed: ' + (e && e.message ? e.message : e));
+      progressEl.textContent = '';
+    }
+  };
+
+  // performImportFromPreview: executes the actual create/update operations for previewRows
+  async function performImportFromPreview(previewRows, mode, defaultRole) {
+    const progressEl = document.getElementById('excelBatchProgress');
+    try {
+      // refresh users map at start to reduce race conditions and include multiple matching strategies
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const usersByEmail = {};
+      const usersByNumber = {};
+      const usersByNameSec = {};
+      function normalizeEmail(s) { if (!s) return ''; return String(s || '').replace(/\uFEFF|\u00A0|\u200B/g, '').trim().toLowerCase(); }
+      function normStr(s) { return String(s || '').replace(/\uFEFF|\u00A0|\u200B/g, '').trim().toLowerCase(); }
+      usersSnap.forEach(d => { const u = d.data(); if (!u) return; const id = d.id; const e = normalizeEmail(u.email); if (e) usersByEmail[e] = { id, data: u }; if (u.number) usersByNumber[String(u.number).trim()] = { id, data: u }; const nameKey = `${normStr(u.first)}|${normStr(u.last)}|${normStr(u.section)}`; if (nameKey && nameKey !== '||') usersByNameSec[nameKey] = { id, data: u }; });
+
+      function findExistingForRow(r) {
+        // Prefer matching within the same role. The row may specify 'role', otherwise use currentRole.
+        const targetRole = (r['role'] || currentRole || '').toString().trim().toLowerCase();
+        const email = normalizeEmail(r['email'] || r['e-mail'] || '');
+        if (email && usersByEmail[email] && String((usersByEmail[email].data && usersByEmail[email].data.role) || '').toLowerCase() === targetRole) return { match: 'email', user: usersByEmail[email] };
+        const number = (r['number'] || '').toString().trim();
+        if (number && usersByNumber[number] && String((usersByNumber[number].data && usersByNumber[number].data.role) || '').toLowerCase() === targetRole) return { match: 'number', user: usersByNumber[number] };
+        const nameKey = `${normStr(r['first'])}|${normStr(r['last'])}|${normStr(r['section'])}`;
+        if (nameKey && usersByNameSec[nameKey] && String((usersByNameSec[nameKey].data && usersByNameSec[nameKey].data.role) || '').toLowerCase() === targetRole) return { match: 'name_section', user: usersByNameSec[nameKey] };
+        return null;
+      }
+
+      let processed = 0, created = 0, updated = 0; const failed = []; const results = [];
+      for (const pr of previewRows) {
+        const i = pr.index; const r = pr.norm; const email = normalizeEmail(pr.email || '');
+        const dataToWrite = {};
+        if (r['first']) dataToWrite.first = String(r['first']).trim();
+        if (r['last']) dataToWrite.last = String(r['last']).trim();
+        if (r['m.i'] || r['mi']) dataToWrite.mi = String(r['m.i'] || r['mi']).trim();
+        if (r['suffix']) dataToWrite.suffix = String(r['suffix']).trim();
+        if (r['section']) dataToWrite.section = String(r['section']).trim();
+        if (r['role']) dataToWrite.role = String(r['role']).trim();
+        if (r['subject']) dataToWrite.subject = String(r['subject']).trim();
+        if (r['active']) dataToWrite.active = (String(r['active']).toLowerCase() === 'true');
+        if (r['number']) dataToWrite.number = String(r['number']).trim();
+        if (r['password']) dataToWrite.password = String(r['password']).trim();
+
+        try {
+          // Use the same heuristic used in preview to determine if this row matches an existing user
+          const found = findExistingForRow(r);
+          if (found) {
+            if (mode === 'create_only') {
+              results.push({ row: i, action: 'skipped_create_only', email });
+            } else {
+              const docId = found.user.id;
+              await updateDoc(doc(db, 'users', docId), dataToWrite);
+              const snap = await getDoc(doc(db, 'users', docId));
+              updated++;
+              const latest = snap.exists() ? snap.data() : null;
+              // update all maps so subsequent rows in this run see the fresh record
+              const latestEmail = normalizeEmail((latest && latest.email) || '');
+              const latestNumber = (latest && latest.number) ? String(latest.number).trim() : '';
+              const latestNameKey = `${normStr((latest && latest.first)||'')}|${normStr((latest && latest.last)||'')}|${normStr((latest && latest.section)||'')}`;
+              if (latestEmail) usersByEmail[latestEmail] = { id: docId, data: latest };
+              if (latestNumber) usersByNumber[latestNumber] = { id: docId, data: latest };
+              if (latestNameKey && latestNameKey !== '||') usersByNameSec[latestNameKey] = { id: docId, data: latest };
+              results.push({ row: i, action: 'updated', email: latestEmail || email, id: docId, data: latest });
+            }
+          } else {
+            if (mode === 'update_only') {
+              failed.push({ row: i, reason: 'User not found (update only mode)', email });
+              results.push({ row: i, action: 'failed_not_found', email });
+            } else {
+              const newUser = Object.assign({}, dataToWrite);
+              newUser.email = email || '';
+              newUser.role = newUser.role || defaultRole || 'student';
+              newUser.active = typeof newUser.active === 'boolean' ? newUser.active : true;
+              newUser.number = newUser.number || (newUser.role === 'student' ? 'S' : 'T') + Math.floor(100000 + Math.random() * 900000);
+              newUser.password = newUser.password || Math.random().toString(36).slice(-8);
+              newUser.isInitialPasswordSet = false;
+              const docRef = await addDoc(collection(db, 'users'), newUser);
+              const docId = docRef.id;
+              const snap = await getDoc(doc(db, 'users', docId));
+              created++;
+              const latest = snap.exists() ? snap.data() : newUser;
+              // populate maps for the new user so subsequent rows don't re-create
+              const latestEmail = normalizeEmail((latest && latest.email) || '');
+              const latestNumber = (latest && latest.number) ? String(latest.number).trim() : '';
+              const latestNameKey = `${normStr((latest && latest.first)||'')}|${normStr((latest && latest.last)||'')}|${normStr((latest && latest.section)||'')}`;
+              if (latestEmail) usersByEmail[latestEmail] = { id: docId, data: latest };
+              if (latestNumber) usersByNumber[latestNumber] = { id: docId, data: latest };
+              if (latestNameKey && latestNameKey !== '||') usersByNameSec[latestNameKey] = { id: docId, data: latest };
+              results.push({ row: i, action: 'created', email: latestEmail || newUser.email, id: docId, data: latest });
+            }
+          }
+        } catch (err) {
+          console.error('row processing failed', i, err);
+          failed.push({ row: i, reason: err && err.message ? err.message : err });
+          results.push({ row: i, action: 'error', email, error: err && err.message ? err.message : String(err) });
+        }
+        processed++; if (processed % 20 === 0) progressEl.textContent = `Processed ${processed} / ${previewRows.length} rows...`;
+        await new Promise(r => setTimeout(r, 10));
+      }
+
+      progressEl.textContent = `Done. Processed ${processed}. Created: ${created}. Updated: ${updated}. Failed: ${failed.length}`;
+      showToast(`Import complete. Created:${created} Updated:${updated}`);
+      console.log('Import results', results);
+      try {
+        const report = { processed, created, updated, failed, results };
+        const prevJson = document.getElementById('importReportJson'); if (prevJson) prevJson.remove();
+        const pre = document.createElement('pre'); pre.id = 'importReportJson'; pre.style.maxHeight='220px'; pre.style.overflow='auto'; pre.style.background='#f6f6f6'; pre.style.padding='8px'; pre.style.marginTop='8px'; pre.style.border='1px solid #ddd'; pre.style.whiteSpace='pre-wrap'; pre.textContent = JSON.stringify(report, null, 2);
+        progressEl.appendChild(pre);
+      } catch (e) { console.warn('failed to create report view', e); }
+      if (failed.length) { const list = failed.map(f => `Row ${f.row}: ${f.reason}`).join('\n'); alert('Some rows failed:\n' + list); }
+      // After import attempt to jump to the last page so new records are visible
+      try {
+        const q2 = query(collection(db, 'users'), where('role', '==', currentRole));
+        const qs2 = await getDocs(q2);
+        const selectedSection = (document.getElementById('filterSectionSelect')?.value || '').trim();
+        const selectedStatus = (document.getElementById('filterStatusSelect')?.value || 'active').toLowerCase();
+        const filtered = qs2.docs.filter(d => {
+          const u = d.data();
+          if (selectedSection && ((u.section || '').trim() !== selectedSection)) return false;
+          if (selectedStatus === 'active' && !u.active) return false;
+          if (selectedStatus === 'inactive' && !!u.active) return false;
+          return true;
+        });
+        const perPage = window._usersPerPage || 5;
+        const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+        window._userPage = totalPages;
+      } catch (e) { console.warn('jump to last page failed', e); }
+      // small delay to allow Firestore indexing/visibility; then refresh UI and close modal
+      await new Promise(r => setTimeout(r, 250));
+      fetchAndRenderUsers(); closeExcelBatchModal();
+    } catch (e) {
+      console.error('Excel import failed', e); alert('Import failed: ' + (e && e.message ? e.message : e)); progressEl.textContent = ''; }
+  }
+
+  // wire custom file chooser button so we don't show the browser default "No file chosen" blank area
+  try {
+    const nativeInput = document.getElementById('excelFileInput');
+    const chooseBtn = document.getElementById('excelChooseBtn');
+    const nameSpan = document.getElementById('excelFileName');
+    if (chooseBtn && nativeInput) {
+      chooseBtn.onclick = () => nativeInput.click();
+      nativeInput.addEventListener('change', () => {
+        if (nativeInput.files && nativeInput.files.length) {
+          nameSpan.textContent = nativeInput.files[0].name;
+        } else {
+          nameSpan.textContent = 'No file chosen';
+        }
+      });
+    }
+  } catch (e) { /* ignore wiring errors */ }
+  
   </script>
 </body>
 </html>

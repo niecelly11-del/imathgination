@@ -1,0 +1,8 @@
+active,first,last,M.I,Suffix,role,email,section,subject,r
+TRUE,game,over,s,jr,teacher,revocayaco@outlook.com,Maharlika,Mathematics,r
+
+# Notes:
+# - Remove comment lines (starting with #) before uploading if your uploader expects pure CSV.
+# - The 'email' column is used to map files to users by email. If you prefer userId mapping instead, let me know.
+# - Valid role values: student, teacher, admin
+# - active: TRUE or FALSE

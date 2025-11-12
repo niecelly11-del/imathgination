@@ -80,7 +80,7 @@
         return;
       }
 
-      // ✅ Match role, number, and password
+      // Query by credentials first, then inspect the active flag in JS
       const q = query(
         collection(db, "users"),
         where("role", "==", "student"),
@@ -96,6 +96,11 @@
 
       const docSnap = snapshot.docs[0];
       const data = docSnap.data();
+      // only block when active is explicitly false; treat missing/other truthy values as active
+      if (data.active === false) {
+        alert("Your account is inactive. Please contact the administrator.");
+        return;
+      }
       const user = {
         id: docSnap.id,
         name: `${data.first} ${data.last}`,
@@ -104,7 +109,7 @@
       };
 
       localStorage.setItem("studentUser", JSON.stringify(user));
-      window.location.href = "index.html"; // 🎮 auto-enter game
+      window.location.href = "index.html"; // auto-enter game
     });
   </script>
 

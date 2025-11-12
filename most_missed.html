@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Most Missed Questions | iMATHgination</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--primary:#6b8e23;--primary-dark:#4c6a1a;--bg:#dfe6cf;--bg-card:#b6c28f;--bg-frame:#8fa36b;--text:#2b2b2b;--accent:#e6e3cc}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter, sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    h1{font-family:Nunito, sans-serif;color:var(--primary-dark)}
+    .card{background:var(--accent);border:1px solid var(--bg-frame);border-radius:12px;padding:18px}
+    .tabs{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .tab-btn{background:transparent;border:1.2px solid rgba(76,106,26,0.15);padding:10px 18px;border-radius:999px;cursor:pointer}
+    .tab-btn.active{background:linear-gradient(90deg,var(--primary),var(--primary-dark));color:#fff;border-color:transparent}
+    .filters{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px;border-bottom:1px solid #e0e0d0}
+    th{background:#cfe0b6;color:var(--primary-dark);text-align:left}
+    .pagination{display:flex;gap:8px;justify-content:center;margin-top:12px}
+    .back-btn{background:var(--accent);border:1px solid var(--bg-frame);padding:8px 12px;border-radius:8px;cursor:pointer}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Most Missed Questions</h1>
+    <div>
+      <button class="back-btn" id="backToReports">Back</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="card">
+      <div class="tabs" id="wrongTopicTabs"></div>
+      <div class="filters">
+        <label style="font-weight:600">Section:</label>
+        <!-- Read-only label: will be filled with teacher's section at init -->
+        <span id="wrongSectionLabel" style="font-weight:600; margin-left:8px;">All</span>
+      </div>
+      <div id="wrongStatus" style="margin-bottom:8px;color:#3d3d3d"></div>
+
+      <table id="wrongAnswersTable">
+        <thead>
+          <tr><th>#</th><th>Question</th><th>Correct Answer</th><th>Student Answers</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="pagination" id="wrongPagination"></div>
+    </div>
+
+    <!-- detail modal-like area -->
+    <div id="wrongDetail" style="display:none; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,0.35); align-items:center; justify-content:center">
+      <div style="max-width:900px;background:var(--accent);margin:40px auto;padding:18px;border-radius:10px;">
+        <h3 id="detailTitle">Question detail</h3>
+        <div id="detailList" style="max-height:400px;overflow:auto;margin-bottom:12px"></div>
+        <div style="text-align:right"><button id="closeDetailBtn">Close</button></div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
+    import { getFirestore, collection, query, where, getDocs, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyADVdmyzhrewkr2-AjV15NwdAqrfhw2TaY",
+      authDomain: "imathgination-7e610.firebaseapp.com",
+      projectId: "imathgination-7e610",
+      storageBucket: "imathgination-7e610.appspot.com",
+      messagingSenderId: "591589679937",
+      appId: "1:591589679937:web:5298f062812021e64c77c0"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const _topicListExplicit = [
+      'Time and World Zones (Timeless Village)',
+      'GMDAS Operations (Operation Forest)',
+      'Multiplying Fractions (Fraction River)',
+      'Area of Shapes (Tri Trap Par Cave)',
+      'Infinity Tower'
+    ];
+    window._wrongTopicSelected = _topicListExplicit[0];
+    window._wrongPage = 1;
+    window._wrongRowsPerPage = 15;
+
+    let allUsers = [];
+
+    // helper functions (copied)
+    function normalizeText(str) {
+      if (!str && str !== 0) return '';
+      try {
+        return String(str).normalize ? String(str).normalize('NFKD') : String(str)
+          .replace(/\p{Diacritic}/gu, '')
+          .replace(/[^\w\s]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .toLowerCase();
+      } catch (e) {
+        return String(str).replace(/[^A-Za-z0-9\s]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+      }
+    }
+
+    // Parse a variety of date fields (timestamp, submittedAt, date, time) into a Date or null
+    function parsePossibleDate(obj) {
+      if (!obj) return null;
+      const candidates = [obj.timestamp, obj.submittedAt, obj.date, obj.time];
+      for (const c of candidates) {
+        if (!c) continue;
+        const n = Number(c);
+        if (!Number.isNaN(n) && isFinite(n)) {
+          // treat as milliseconds (if large) or seconds (if small)
+          return n > 1e12 ? new Date(n) : new Date(n);
+        }
+        const d = new Date(c);
+        if (!isNaN(d)) return d;
+      }
+      return null;
+    }
+
+    // Create a safe key for use as data attributes / ids
+    function sanitizeKey(k) {
+      return String(k || '').toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
+    }
+
+    // Minimal HTML escape used for detail rendering
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch] || ch));
+    }
+
+    function renderTopicTabs() {
+      const tabs = document.getElementById('wrongTopicTabs');
+      tabs.innerHTML = '';
+      _topicListExplicit.forEach(t => {
+        const btn = document.createElement('button');
+        btn.textContent = t;
+        btn.className = window._wrongTopicSelected === t ? 'tab-btn active' : 'tab-btn';
+        btn.onclick = () => { window._wrongTopicSelected = t; window._wrongPage = 1; loadWrongAnswers(); renderTopicTabs(); };
+        tabs.appendChild(btn);
+      });
+    }
+
+    function renderWrongPagination(totalRows) {
+      const container = document.getElementById('wrongPagination');
+      container.innerHTML = '';
+      const totalPages = Math.max(1, Math.ceil(totalRows / window._wrongRowsPerPage));
+      const prev = document.createElement('button'); prev.textContent = 'Prev'; prev.disabled = window._wrongPage <= 1;
+      const next = document.createElement('button'); next.textContent = 'Next'; next.disabled = window._wrongPage >= totalPages;
+      prev.onclick = () => { if (window._wrongPage > 1) { window._wrongPage--; loadWrongAnswers(); } };
+      next.onclick = () => { if (window._wrongPage < totalPages) { window._wrongPage++; loadWrongAnswers(); } };
+      container.appendChild(prev);
+      const info = document.createElement('span'); info.textContent = ` Page ${window._wrongPage} of ${totalPages} `;
+      container.appendChild(info);
+      container.appendChild(next);
+    }
+
+    async function loadWrongAnswers() {
+      const tbody = document.querySelector('#wrongAnswersTable tbody');
+      tbody.innerHTML = "<tr><td colspan='4'>Loading...</td></tr>";
+      try {
+        const questionStats = {};
+        const studentsQ = query(collection(db, 'users'), where('role', '==', 'student'));
+
+        // Load assessments and index their questions so answers stored under user.assessmentAnswers can be included
+        const assessmentDocs = await getDocs(collection(db, 'assessments'));
+        const assessmentMap = {}; // aid -> data
+
+        // --- CHANGED: build text/id indexes for assessment questions so progress entries can be matched ---
+        const questionTextIndex = {}; // normalized question text -> rawKey
+        const questionIdIndex = {};   // explicit question id -> rawKey
+
+        assessmentDocs.docs.forEach(aDoc => {
+          const a = aDoc.data() || {};
+          assessmentMap[aDoc.id] = a;
+          const qs = Array.isArray(a.questions) ? a.questions : [];
+          qs.forEach((qObj, idx) => {
+            const rawKey = `${aDoc.id}__${idx}`;
+            const qText = qObj && (qObj.question || qObj.prompt || qObj.text) ? String(qObj.question || qObj.prompt || qObj.text).trim() : (`Question ${idx+1}`);
+            const qNorm = normalizeText(qText);
+            // register indexes for matching later
+            if (qNorm) questionTextIndex[qNorm] = rawKey;
+            if (qObj && (qObj.id || qObj.questionId)) {
+              const qid = qObj.id || qObj.questionId;
+              questionIdIndex[String(qid)] = rawKey;
+            }
+            questionStats[rawKey] = questionStats[rawKey] || {
+              question: qText,
+              questionNormalized: qNorm,
+              correctAnswer: qObj.answer || qObj.correctAnswer || '',
+              studentAnswers: {},
+              studentList: [],
+              assessmentId: aDoc.id,
+              assessmentTitle: a.title || aDoc.id,
+              assessmentTopicNormalized: normalizeText(a.topic || a.assessmentTopic || (a.tags||[]).join(' ') || a.title || '')
+            };
+          });
+        });
+        // --- end CHANGED ---
+
+        const snapshot = await getDocs(studentsQ);
+
+        // prepare normalized topic for filtering and quick lookup of known topics
+        const selTopicNorm = normalizeText(window._wrongTopicSelected || 'All');
+        const normalizedTopics = _topicListExplicit.map(t => normalizeText(t));
+
+        // section filter: prefer teacher-specified section if present, otherwise 'All'
+        const sectionFilter = window._teacherSection || 'All';
+
+        // Build stats from student progress (create "progress-only" grouped questions and attach inferred topic)
+        const seenSections = new Set();
+        for (const studentDoc of snapshot.docs) {
+          const studentData = studentDoc.data();
+          if (studentData.active === false) continue;
+          const studentSection = studentData.section || '—';
+          seenSections.add(studentSection);
+
+          // apply section filter early
+          if (sectionFilter !== 'All' && studentSection !== sectionFilter) continue;
+
+          // 1) process progress-style question lists
+          const progress = studentData.progress || {};
+          for (const p of Object.values(progress)) {
+            const pTopicNorm = normalizeText(p.topic || p.assessmentTopic || p.title || p.name || '');
+            const qList = Array.isArray(p.questions) ? p.questions : (Array.isArray(p.answers) ? p.answers : (Array.isArray(p.responses) ? p.responses : []));
+            qList.forEach(q => {
+              const rawText = q && (q.question || q.prompt || q.q || q.text);
+              if (!rawText) return;
+              const qText = String(rawText).trim();
+              const norm = normalizeText(qText);
+              if (!norm) return;
+
+              // --- CHANGED: try to match this progress question to an assessment question (by normalized text or id).
+              let targetKey = null;
+              if (questionTextIndex[norm]) {
+                targetKey = questionTextIndex[norm];
+              } else if (q && (q.id || q.questionId) && questionIdIndex[String(q.id || q.questionId)]) {
+                targetKey = questionIdIndex[String(q.id || q.questionId)];
+              }
+              // fallback to progress-scoped key if no assessment match
+              if (!targetKey) targetKey = `progress__${norm}`;
+              if (!questionStats[targetKey]) {
+                questionStats[targetKey] = {
+                  question: qText,
+                  correctAnswer: q.correctAnswer || q.correct || '',
+                  studentAnswers: {},
+                  studentList: [],
+                  assessmentTopicNormalized: pTopicNorm || ''
+                };
+              }
+              // --- end CHANGED ---
+
+              const studentAns = (q.studentAnswer !== undefined) ? String(q.studentAnswer).trim() : ((q.answer !== undefined) ? String(q.answer).trim() : '');
+              // determine correctness: prefer known correctAnswer from questionStats entry (normalized)
+              const correctNorm = normalizeText(questionStats[targetKey].correctAnswer || '');
+              const studentAnsNorm = normalizeText(studentAns || '');
+              const isCorrect = correctNorm && studentAns && (studentAnsNorm === correctNorm);
+              // include only if wrong (or if correct answer unknown we include as "uncertain")
+              if (studentAns && !isCorrect) {
+                questionStats[targetKey].studentAnswers[studentAns] = (questionStats[targetKey].studentAnswers[studentAns] || 0) + 1;
+                questionStats[targetKey].studentList.push({
+                  number: studentData.number || studentData.num || studentDoc.id,
+                  name: `${studentData.first || ''} ${studentData.last || ''}`.trim(),
+                  section: studentSection,
+                  answer: studentAns,
+                  date: parsePossibleDate(q) || parsePossibleDate(p) || null
+                });
+              }
+            });
+          }
+
+          // 2) process assessmentAnswers map on the user and attribute to assessment questions
+          const assessmentAnswers = studentData.assessmentAnswers || {};
+          for (const [aid, qmap] of Object.entries(assessmentAnswers || {})) {
+            if (!qmap || typeof qmap !== 'object') continue;
+            const aData = assessmentMap[aid] || null;
+            for (const qKey of Object.keys(qmap)) {
+              const entry = qmap[qKey] || {};
+              const idx = (entry.index !== undefined && entry.index !== null) ? Number(entry.index) : (/\d+/.exec(qKey) ? Number(/\d+/.exec(qKey)[0]) : null);
+              const rawKey = (aData && idx !== null) ? `${aid}__${idx}` : (`assessment__${aid}__${qKey}`);
+
+              let qText = '';
+              if (aData && Array.isArray(aData.questions) && idx !== null && aData.questions[idx]) {
+                qText = aData.questions[idx].question || aData.questions[idx].prompt || aData.questions[idx].text || (`Question ${idx+1}`);
+              } else {
+                qText = entry.question || entry.prompt || entry.text || String(entry.answer || '').slice(0, 120) || `Question ${qKey}`;
+              }
+              const qNorm = normalizeText(qText);
+              if (!questionStats[rawKey]) {
+                questionStats[rawKey] = {
+                  question: qText,
+                  questionNormalized: qNorm,
+                  correctAnswer: (aData && Array.isArray(aData.questions) && idx !== null && aData.questions[idx]) ? (aData.questions[idx].answer || aData.questions[idx].correctAnswer || '') : (entry.correctAnswer || entry.key || ''),
+                  studentAnswers: {},
+                  studentList: [],
+                  assessmentId: aData ? aid : null,
+                  assessmentTitle: aData ? (aData.title || aid) : aid,
+                  assessmentTopicNormalized: aData ? normalizeText(aData.topic || aData.assessmentTopic || (aData.tags||[]).join(' ') || aData.title || '') : normalizeText(entry.topic || entry.title || '')
+                };
+              }
+              const studentAns = (entry.answer !== undefined) ? String(entry.answer).trim() : ((entry.studentAnswer !== undefined) ? String(entry.studentAnswer).trim() : '');
+              const correctNorm = normalizeText(questionStats[rawKey].correctAnswer || '');
+              const studentAnsNorm = normalizeText(studentAns || '');
+              const isCorrect = correctNorm && studentAns && (studentAnsNorm === correctNorm);
+              if (studentAns && !isCorrect) {
+                questionStats[rawKey].studentAnswers[studentAns] = (questionStats[rawKey].studentAnswers[studentAns] || 0) + 1;
+                questionStats[rawKey].studentList.push({
+                  number: studentData.number || studentData.num || studentDoc.id,
+                  name: `${studentData.first || ''} ${studentData.last || ''}`.trim(),
+                  section: studentSection,
+                  answer: studentAns,
+                  date: parsePossibleDate(entry) || null
+                });
+              }
+            }
+          }
+
+        } // end students loop
+
+        // since the UI is teacher-scoped, we don't expose a dropdown here.
+        // still keep seenSections for diagnostics if needed (no DOM update required).
+
+        // store for drilldown access using sanitized keys (only entries with at least one wrong response)
+        window._wrongQuestionStats = {};
+        Object.entries(questionStats).forEach(([rawKey, obj]) => {
+          // only expose questions that have wrong responses
+          if (obj && obj.studentList && obj.studentList.length) {
+            const sKey = sanitizeKey(rawKey);
+            window._wrongQuestionStats[sKey] = obj;
+          }
+        });
+
+        // build list from only entries that have wrong responses
+        const entries = Object.entries(window._wrongQuestionStats);
+
+        // topic filtering: keep entries whose topic matches or whose question text contains the topic
+        const selTopic = normalizeText(window._wrongTopicSelected || 'All');
+        let filteredEntries = entries;
+        if (selTopic && selTopic !== 'all') {
+          filteredEntries = entries.filter(([k, obj]) => {
+            const at = obj.assessmentTopicNormalized || '';
+            const qNorm = normalizeText(obj.question || '');
+            return (at && (at.includes(selTopic) || selTopic.includes(at))) || (qNorm && qNorm.includes(selTopic));
+          });
+        }
+
+        // prepare sorted array by number of wrong answers
+        const sorted = filteredEntries.map(e => e[1]).sort((a, b) => {
+          const aCount = Object.values(a.studentAnswers).reduce((s, v) => s + v, 0);
+          const bCount = Object.values(b.studentAnswers).reduce((s, v) => s + v, 0);
+          return bCount - aCount;
+        });
+
+        // render status
+        const statusEl = document.getElementById('wrongStatus');
+        if (statusEl) {
+          statusEl.textContent = `Showing ${sorted.length} questions with wrong responses for "${window._wrongTopicSelected}".`;
+        }
+
+        if (sorted.length === 0) {
+          tbody.innerHTML = "<tr><td colspan='4'>No wrong responses found.</td></tr>";
+          renderWrongPagination(0);
+          return;
+        }
+
+        // pagination
+        const start = (window._wrongPage - 1) * window._wrongRowsPerPage;
+        const page = sorted.slice(start, start + window._wrongRowsPerPage);
+
+        tbody.innerHTML = page.map((q, i) => {
+          const answers = Object.entries(q.studentAnswers).sort((a,b)=>b[1]-a[1]).map(([ans,cnt])=>`${ans}: ${cnt}`).join(', ');
+          const rawKey = Object.keys(window._wrongQuestionStats).find(k => window._wrongQuestionStats[k] === q) || q.question || `q_${start+i}`;
+          const sKey = sanitizeKey(rawKey);
+          const studentNumbers = Array.from(new Set((q.studentList || []).map(s => s.number).filter(Boolean))).join(', ');
+          return `<tr data-qkey="${sKey}"><td>${start + i + 1}</td><td>${q.question}</td><td>${q.correctAnswer || '—'}</td><td>${answers || '—'}</td></tr>`;
+        }).join('');
+
+        renderWrongPagination(sorted.length);
+      } catch (e) {
+        console.error('loadWrongAnswers failed', e);
+        tbody.innerHTML = "<tr><td colspan='4'>Error loading data.</td></tr>";
+      }
+    }
+
+    function openWrongDetail(qkey, stats) {
+      const wrap = document.getElementById('wrongDetail');
+      document.getElementById('detailTitle').textContent = stats.question || 'Question detail';
+      const list = document.getElementById('detailList');
+      list.innerHTML = '';
+      // Build a simple list of student answers (we don't have mapping here, so show aggregated)
+      Object.entries(stats.studentAnswers).forEach(([ans,cnt]) => {
+        const div = document.createElement('div'); div.textContent = `${ans}: ${cnt}`; div.style.padding='6px 0'; list.appendChild(div);
+      });
+      wrap.style.display = 'flex';
+    }
+
+    document.getElementById('closeDetailBtn').addEventListener('click', () => { document.getElementById('wrongDetail').style.display = 'none'; });
+    document.getElementById('backToReports').addEventListener('click', () => { window.location.href = 'data_reports.html'; });
+
+    // row click -> show detail using precomputed window._wrongQuestionStats (only wrong responses)
+    document.querySelector('#wrongAnswersTable tbody').addEventListener('click', (e) => {
+      const tr = e.target.closest('tr');
+      if (!tr) return;
+      const qkey = tr.dataset.qkey;
+      if (!qkey) return;
+      const stats = window._wrongQuestionStats && window._wrongQuestionStats[qkey];
+      if (stats) {
+        // show studentList which was built to include only wrong responses
+        const wrap = document.getElementById('wrongDetail');
+        document.getElementById('detailTitle').textContent = stats.question || 'Question detail';
+        const list = document.getElementById('detailList');
+        list.innerHTML = '';
+        (stats.studentList || []).forEach(s => {
+          const div = document.createElement('div');
+          div.style.padding = '6px 0';
+          div.innerHTML = `<strong>${escapeHtml(s.name || '—')}</strong> <span style="color:#666">(${escapeHtml(s.section||'—')})</span>: <em>${escapeHtml(s.answer||'—')}</em>`;
+          list.appendChild(div);
+        });
+        wrap.style.display = 'flex';
+      }
+    });
+
+    // teacher section (null => allow All behavior)
+    window._teacherSection = null;
+
+    async function determineTeacherSection() {
+      try {
+        // prefer session from localStorage (fast)
+        const sessionRaw = localStorage.getItem('session');
+        if (sessionRaw) {
+          const s = JSON.parse(sessionRaw);
+          if (s && s.role === 'teacher' && s.section) {
+            window._teacherSection = s.section;
+          } else if (s && s.role === 'teacher' && s.number) {
+            // fallback: query Firestore for teacher record by number
+            try {
+              const tq = query(collection(db, 'users'), where('number', '==', s.number));
+              const tSnap = await getDocs(tq);
+              if (!tSnap.empty) {
+                const tdata = tSnap.docs[0].data();
+                if (tdata && tdata.section) window._teacherSection = tdata.section;
+              }
+            } catch (e) { console.warn('teacher lookup failed', e); }
+          }
+        }
+      } catch (e) { /* ignore parse errors */ }
+      // update UI label
+      const lbl = document.getElementById('wrongSectionLabel');
+      if (lbl) lbl.textContent = window._teacherSection || 'All';
+    }
+
+    // init: determine teacher section then render tabs and load data
+    async function initPage() {
+      try {
+        await determineTeacherSection();
+        renderTopicTabs();
+        await loadWrongAnswers();
+      } catch (e) {
+        console.error('initPage failed', e);
+      }
+    }
+
+    // ensure initPage runs once after the DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPage);
+    } else {
+      initPage();
+    }
+  </script>
+</body>
+</html>

@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quest & Assessment Builder | iMATHgination Teacher</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-
   <style>
     body {
       font-family: "Nunito", sans-serif;
@@ -24,10 +23,7 @@
       border-bottom: 2px solid #8fa36b;
       border-radius: 0 0 14px 14px;
     }
-    h1 {
-      margin: 0;
-      font-size: 1.6rem;
-    }
+    h1 { margin: 0; font-size: 1.6rem; }
     button {
       background: #e6e3cc;
       color: #4a6b16;
@@ -38,51 +34,85 @@
       font-weight: 600;
       transition: all 0.2s ease;
     }
-    button:hover {
-      background: #4a6b16;
-      color: white;
-    }
+    button:hover { background: #4a6b16; color: white; }
     .container {
       background: white;
       border-radius: 16px;
       padding: 30px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       max-width: 900px;
       margin: 30px auto;
+      text-align: center;
     }
-    label {
-      font-weight: 600;
-      margin-top: 10px;
-      display: block;
+    .quest-card {
+      background: #f6f7ee;
+      border: 1px solid #b6c28f;
+      border-radius: 12px;
+      padding: 15px;
+      margin: 10px 0;
+      text-align: left;
+    }
+    .quest-title { font-weight: 700; margin-bottom: 8px; }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 100;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+    }
+    .modal-content {
+      position: relative;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 500px;
+      margin: 4% auto;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      max-height: 85vh;
+    }
+    .scrollable-content { overflow-y: auto; flex-grow: 1; margin-top: 10px; padding-right: 6px; }
+    .close {
+      position: absolute; top: 10px; right: 15px;
+      font-size: 22px; font-weight: bold; color: #333;
+      cursor: pointer; background: #f1f1f1; border-radius: 50%;
+      width: 28px; height: 28px; text-align: center; line-height: 26px;
+      transition: 0.2s;
+    }
+    .close:hover { background: #4a6b16; color: white; }
+    .question-item {
+      background: #eef0e6;
+      padding: 8px;
+      border-radius: 8px;
+      margin: 6px 0;
     }
     input, textarea, select {
       width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
+      padding: 8px;
+      margin: 6px 0;
       border-radius: 8px;
-      margin-bottom: 15px;
+      border: 1px solid #8fa36b;
     }
-    table {
-      width: 100%;
-      margin-top: 30px;
-      border-collapse: collapse;
+    ul { padding-left: 20px; margin: 5px 0; }
+    /* points badge for questions preview */
+    .points-badge {
+      display: inline-block;
+      background: #6b8e23;
+      color: #fff;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      vertical-align: middle;
+      margin-left: 8px;
     }
-    th, td {
-      border-bottom: 1px solid #ddd;
-      padding: 10px;
-      text-align: left;
-    }
-    th {
-      color: #4a6b16;
-    }
-    .edit-btn {
-      background: #f1c40f;
-      color: #000;
-      padding: 6px 10px;
-      border-radius: 6px;
-    }
+    .q-preview { background: rgba(142,169,105,0.06); padding:10px; border-radius:8px; margin-bottom:6px; }
+    .q-edit { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
   </style>
 </head>
+
 <body>
   <header>
     <h1>Assessment Module</h1>
@@ -90,136 +120,60 @@
   </header>
 
   <div class="container">
-    <h1>Create or Edit Quests</h1>
+    <h2>Question Management</h2>
+    <button id="createQuestBtn">+ Create New Batch</button>
+    <div id="questList"></div>
 
-    <form id="questForm">
-      <label>Quest ID (must match game, e.g. quest_1)</label>
-      <input type="text" id="questId" required placeholder="e.g., quest_1" />
-
-      <label>Quest Title</label>
-      <input type="text" id="questTitle" required />
-
-      <label>Description</label>
-      <textarea id="questDesc" required></textarea>
-
-      <label>Lesson/Topic</label>
-      <select id="questLesson" required>
-        <option value="">-- Select --</option>
-        <option value="Timeless Village">Timeless Village</option>
-        <option value="Operation Forest">Operation Forest</option>
-        <option value="Multiplying Fractions">Multiplying Fractions</option>
-        <option value="Area of Shapes">Area of Shapes</option>
-      </select>
-
-      <label>Question</label>
-      <textarea id="questQuestion" required></textarea>
-
-      <label>Answer Options (comma separated)</label>
-      <input type="text" id="questOptions" placeholder="e.g. 2, 3, 4, 5" required />
-
-      <label>Correct Answer</label>
-      <input type="text" id="questAnswer" required />
-
-      <button type="submit">💾 Save / Update Quest</button>
-    </form>
-
-    <h2>Existing Quests</h2>
-    <table>
-      <thead>
-        <tr><th>ID</th><th>Title</th><th>Lesson</th><th>Question</th><th>Answer</th><th>Action</th></tr>
-      </thead>
-      <tbody id="questTable"></tbody>
-    </table>
+    <!-- topics buttons removed -->
+    <!--
+    <div class="topics">
+      <button class="topic-btn">Time and World Zones (Timeless Village)</button>
+      <button class="topic-btn">GMDAS Operations (Operation Forest)</button>
+      <button class="topic-btn">Multiplying Fractions (Fraction River)</button>
+      <button class="topic-btn">Area of Shapes (Tri Trap Par Cave)</button>
+    </div>
+    -->
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+  <!-- Quest Modal -->
+  <div id="questModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('questModal')">&times;</span>
+      <h3 id="modalTitle">Create New Batch</h3>
+      <input type="text" id="questTitleInput" placeholder="Enter quest title..." />
+      <button onclick="saveQuest()">Save Quest</button>
+    </div>
+  </div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyADVdmyzhrewkr2-AjV15NwdAqrfhw2TaY",
-      authDomain: "imathgination-7e610.firebaseapp.com",
-      projectId: "imathgination-7e610",
-      storageBucket: "imathgination-7e610.appspot.com",
-      messagingSenderId: "591589679937",
-      appId: "1:591589679937:web:5298f062812021e64c77c0"
-    };
+  <!-- Dynamic Modals for Assessments -->
+  <div id="assessmentModals"></div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  <!-- Add/Edit Question Modal -->
+  <div id="questionModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('questionModal')">&times;</span>
+    <h3 id="questionModalTitle">Add Question</h3>
+    <label>Question:</label>
+    <input type="text" id="questionText" placeholder="Enter your question">
 
-    const questForm = document.getElementById("questForm");
-    const questTable = document.getElementById("questTable");
+    <label>Question Type:</label>
+    <select id="questionType" onchange="handleQuestionTypeChange()">
+      <option value="">-- Select Type --</option>
+      <option value="multiple">Multiple Choice</option>
+      <option value="truefalse">True or False</option>
+    </select>
 
-    // 🧩 Load existing quests
-    async function loadQuests() {
-      const querySnapshot = await getDocs(collection(db, "assessments"));
-      questTable.innerHTML = "";
-      querySnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const q = data.questions?.[0] || {};
-        const row = `
-          <tr>
-            <td>${docSnap.id}</td>
-            <td>${data.title || ""}</td>
-            <td>${data.lesson || ""}</td>
-            <td>${q.question || "—"}</td>
-            <td>${q.answer || "—"}</td>
-            <td><button class="edit-btn" onclick="editQuest('${docSnap.id}')">Edit</button></td>
-          </tr>`;
-        questTable.insertAdjacentHTML("beforeend", row);
-      });
-    }
-    loadQuests();
+    <div id="optionsContainer"></div>
+    <div id="answerContainer"></div>
+    
+    <label>Points:</label>
+    <input type="number" id="questionPoints" value="1" min="0" step="1" />
 
-    // 💾 Save or update quest
-    questForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
+    <button onclick="saveQuestion()">💾 Save Question</button>
+  </div>
+</div>
 
-      const questId = document.getElementById("questId").value.trim();
-      const title = document.getElementById("questTitle").value.trim();
-      const desc = document.getElementById("questDesc").value.trim();
-      const lesson = document.getElementById("questLesson").value.trim();
-      const question = document.getElementById("questQuestion").value.trim();
-      const options = document.getElementById("questOptions").value.split(",").map(o => o.trim());
-      const answer = document.getElementById("questAnswer").value.trim();
 
-      const docRef = doc(db, "assessments", questId);
-      await setDoc(docRef, {
-        title,
-        description: desc,
-        lesson,
-        questions: [{ question, options, answer }],
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-
-      alert("✅ Quest saved successfully!");
-      questForm.reset();
-      loadQuests();
-    });
-
-    // ✏️ Edit quest
-    window.editQuest = async function (id) {
-      const docRef = doc(db, "assessments", id);
-      const snap = await getDocs(collection(db, "assessments"));
-      const found = snap.docs.find(d => d.id === id);
-      if (!found) return alert("Quest not found!");
-
-      const data = found.data();
-      const q = data.questions?.[0] || {};
-
-      document.getElementById("questId").value = id;
-      document.getElementById("questTitle").value = data.title || "";
-      document.getElementById("questDesc").value = data.description || "";
-      document.getElementById("questLesson").value = data.lesson || "";
-      document.getElementById("questQuestion").value = q.question || "";
-      document.getElementById("questOptions").value = q.options?.join(", ") || "";
-      document.getElementById("questAnswer").value = q.answer || "";
-    };
-
-    window.goBack = function () {
-      window.location.href = "teacher.html";
-    };
-  </script>
+<script type="module" src="./assessment_module.js"></script> 
 </body>
 </html>

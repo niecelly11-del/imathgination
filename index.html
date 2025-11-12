@@ -300,53 +300,31 @@
       const student = JSON.parse(localStorage.getItem("studentUser"));
       if (student) {
         const userRef = doc(db, "users", student.id);
-        try {
-          const snapUser = await getDoc(userRef);
-          const userData = snapUser.exists() ? snapUser.data() : {};
+        const snapUser = await getDoc(userRef);
+        const userData = snapUser.exists() ? snapUser.data() : {};
 
-          const progress = userData.progress || {};
-          const scores = userData.scores || {};
+        const progress = userData.progress || {};
+        const scores = userData.scores || {};
 
-          progress[questId] = {
-            title: data.title,
-            score: finalScore,
-            status: "Completed",
-            completedAt: new Date().toISOString(),
-            questions: window._currentQuizResponses || []
-          };
+        progress[questId] = {
+          title: data.title,
+          score: finalScore,
+          status: "Completed",
+          completedAt: new Date().toISOString(),
+          questions: window._currentQuizResponses || []
+        };
 
-          // Match quest to topic key for reports
-          let topicKey = "";
-          if (questId === "quest_1") topicKey = "timelessVillage";
-          else if (questId === "quest_2") topicKey = "gmdasOperations";
-          else if (questId === "quest_3") topicKey = "multiplyingFractions";
-          else if (questId === "quest_4") topicKey = "areaOfShapes";
-          else topicKey = questId;
+        // Match quest to topic key for reports
+        let topicKey = "";
+        if (questId === "quest_1") topicKey = "timelessVillage";
+        else if (questId === "quest_2") topicKey = "gmdasOperations";
+        else if (questId === "quest_3") topicKey = "multiplyingFractions";
+        else if (questId === "quest_4") topicKey = "areaOfShapes";
+        else topicKey = questId;
 
-          scores[topicKey] = finalScore;
+        scores[topicKey] = finalScore;
 
-          await updateDoc(userRef, { progress, scores });
-
-          // read back to confirm saved
-          const confirmSnap = await getDoc(userRef);
-          console.log('Saved user progress for', student.id, confirmSnap.exists() ? confirmSnap.data().progress?.[questId] : null);
-
-          // reset temp responses
-          window._currentQuizResponses = [];
-
-          // show brief confirmation in the quiz container
-          const savedMsg = document.createElement('div');
-          savedMsg.style.marginTop = '12px';
-          savedMsg.style.padding = '8px';
-          savedMsg.style.background = '#e6f4e6';
-          savedMsg.style.color = '#265a16';
-          savedMsg.style.borderRadius = '8px';
-          savedMsg.textContent = 'Progress saved to server.';
-          quizContainer.appendChild(savedMsg);
-        } catch (err) {
-          console.error('Failed saving progress', err);
-          alert('There was an error saving your progress. Check the console for details.');
-        }
+        await updateDoc(userRef, { progress, scores });
       }
       setTimeout(() => {
         quizContainer.style.display = "none";

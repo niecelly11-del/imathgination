@@ -193,7 +193,7 @@
   <header>
     <h1>Admin Dashboard</h1>
     <div class="header-buttons">
-      <!-- <button onclick="openPasswordModal()">Change Password</button> -->
+      <button onclick="openPasswordModal()">Change Password</button>
       <button onclick="logout()">Logout</button>
     </div>
   </header>
@@ -225,92 +225,93 @@
     </div>
   </div>
 
-  <script>
-    // Default admin password setup
-    if (!localStorage.getItem("adminPassword")) {
-      localStorage.setItem("adminPassword", "1234");
-    }
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-    function openModule(page) {
+    const firebaseConfig = {
+      apiKey: "AIzaSyADVdmyzhrewkr2-AjV15NwdAqrfhw2TaY",
+      authDomain: "imathgination-7e610.firebaseapp.com",
+      projectId: "imathgination-7e610",
+      storageBucket: "imathgination-7e610.appspot.com",
+      messagingSenderId: "591589679937",
+      appId: "1:591589679937:web:5298f062812021e64c77c0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Open a module page
+    window.openModule = function(page) {
       window.location.href = page;
-    }
+    };
 
-    function logout() {
-      sessionStorage.clear();
-      window.location.href = "imathgination.html";
-    }
+    // Logout: clear session and go to login
+    window.logout = function() {
+      try { localStorage.removeItem('session'); } catch(e) {}
+      try { sessionStorage.clear(); } catch(e) {}
+      window.location.href = 'imathgination.html';
+    };
 
-    function openPasswordModal() {
-      document.getElementById("passwordModal").style.display = "flex";
-    }
+    window.openPasswordModal = function() {
+      document.getElementById('passwordModal').style.display = 'flex';
+    };
 
-    function closePasswordModal() {
-      document.getElementById("passwordModal").style.display = "none";
-    }
+    window.closePasswordModal = function() {
+      document.getElementById('passwordModal').style.display = 'none';
+    };
 
-    function updatePassword() {
-      const oldPass = document.getElementById("oldPassword").value.trim();
-      const newPass = document.getElementById("newPassword").value.trim();
-      const confirmPass = document.getElementById("confirmPassword").value.trim();
-
-      const currentPass = localStorage.getItem("adminPassword");
+    // Update password: validate against logged-in user in Firestore when available
+    window.updatePassword = async function() {
+      const oldPass = document.getElementById('oldPassword').value.trim();
+      const newPass = document.getElementById('newPassword').value.trim();
+      const confirmPass = document.getElementById('confirmPassword').value.trim();
 
       if (!oldPass || !newPass || !confirmPass) {
-        alert("Please fill in all fields.");
+        alert('Please fill in all fields.');
         return;
       }
-
-      if (oldPass !== currentPass) {
-        alert("Incorrect current password.");
-        return;
-      }
-
       if (newPass !== confirmPass) {
-        alert("New passwords do not match.");
+        alert('New passwords do not match.');
         return;
       }
 
-      localStorage.setItem("adminPassword", newPass);
-      alert("Password updated successfully!");
+      // Try to use logged-in session (set by imathgination.html)
+      const session = JSON.parse(localStorage.getItem('session') || 'null');
 
-      // Clear fields and close modal
-      document.getElementById("oldPassword").value = "";
-      document.getElementById("newPassword").value = "";
-      document.getElementById("confirmPassword").value = "";
-      closePasswordModal();
-    }
+      try {
+        if (session && (session.email || session.number)) {
+          const usersRef = collection(db, 'users');
+          let q;
+          if (session.email) {
+            q = query(usersRef, where('email', '==', session.email), where('password', '==', oldPass));
+          } else {
+            q = query(usersRef, where('number', '==', session.number), where('password', '==', oldPass));
+          }
+          const snap = await getDocs(q);
+          if (snap.empty) {
+            alert('Incorrect current password.');
+            return;
+          }
+          const docSnap = snap.docs[0];
+          await updateDoc(doc(db, 'users', docSnap.id), { password: newPass });
+        } else {
+          // Fallback: legacy local admin password stored in localStorage
+          const currentPass = localStorage.getItem('adminPassword') || '';
+          if (oldPass !== currentPass) { alert('Incorrect current password.'); return; }
+          localStorage.setItem('adminPassword', newPass);
+        }
+
+        alert('Password updated successfully!');
+        document.getElementById('oldPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        closePasswordModal();
+      } catch (err) {
+        console.error('Update password error:', err);
+        alert('Failed to update password: ' + (err && err.message ? err.message : String(err)));
+      }
+    };
   </script>
 </body>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyADVdmyzhrewkr2-AjV15NwdAqrfhw2TaY",
-    authDomain: "imathgination-7e610.firebaseapp.com",
-    projectId: "imathgination-7e610",
-    storageBucket: "imathgination-7e610.appspot.com",
-    messagingSenderId: "591589679937",
-    appId: "1:591589679937:web:5298f062812021e64c77c0",
-    measurementId: "G-NQBJ952VLG"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const db = getFirestore(app);
-
-  async function addData() {
-    try {
-      const docRef = await addDoc(collection(db, "yourCollectionName"), {
-        field1: "value1",
-        field2: "value2"
-      });
-      console.log("Document written with ID: ", docRef.id);
-    } catch (e) {
-      console.error("Error adding document: ", e);
-    }
-  }
-  // Call addData() when needed
-</script>
 </html>

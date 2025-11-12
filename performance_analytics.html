@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Performance Analytics | iMATHgination</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--primary:#6b8e23;--primary-dark:#4c6a1a;--bg:#dfe6cf;--bg-card:#b6c28f;--bg-frame:#8fa36b;--text:#2b2b2b;--accent:#e6e3cc;--font-main:"Inter",sans-serif;--font-soft:"Nunito",sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font-main);background-color:var(--bg);color:var(--text);margin:0;padding:0;border:10px solid var(--bg-frame);box-shadow:inset 0 0 30px rgba(0,0,0,.15);display:flex;flex-direction:column;align-items:center;min-height:97.4vh}
+    header{background:var(--bg-card);color:var(--primary-dark);padding:20px;display:flex;justify-content:space-between;align-items:center;width:100%;max-width:1100px;border-bottom:2px solid var(--bg-frame);border-radius:0 0 14px 14px}
+    h1{font-family:var(--font-soft);font-weight:700}
+    main{width:100%;max-width:1000px;padding:28px}
+    .table-card{background:var(--accent);border:1px solid var(--bg-frame);border-radius:14px;padding:20px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+    .card{background:transparent;border-radius:8px;padding:12px}
+    .cards-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .card h3{margin-bottom:8px;font-family:var(--font-soft);color:var(--primary-dark)}
+    .back-btn{background:var(--accent);color:var(--primary-dark);border:1px solid var(--bg-frame);padding:8px 18px;border-radius:20px;cursor:pointer;font-weight:600}
+    .back-btn:hover{background:var(--primary-dark);color:white}
+    .center{display:flex;align-items:center;justify-content:center}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    @media(max-width:880px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Performance Analytics</h1>
+    <div>
+      <button class="back-btn" id="backToReports">Back</button>
+    </div>
+  </header>
+  <main>
+    <div class="table-card">
+      <div class="cards-row">
+        <div class="card" style="flex:1;min-width:220px;text-align:center">
+          <h3>📊 Average score per section</h3>
+          <div id="avgPerSection">Loading...</div>
+          <canvas id="miniAvgSpark" width="220" height="48" style="margin-top:8px;max-width:260px"></canvas>
+        </div>
+        <div class="card" style="flex:1;min-width:220px;text-align:center">
+          <h3>🧠 Top-performing student</h3>
+          <div id="topStudent">Loading...</div>
+          <canvas id="miniTopDonut" width="120" height="80" style="margin-top:8px;max-width:140px"></canvas>
+        </div>
+        <div class="card" style="flex:1;min-width:220px;text-align:center">
+          <h3>🚩 Students needing review</h3>
+          <div id="needReview">Loading...</div>
+          <canvas id="miniNeedBar" width="220" height="48" style="margin-top:8px;max-width:260px"></canvas>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <div style="text-align:center;font-weight:700;margin-bottom:6px">Average score per section</div>
+          <canvas id="avgChart" style="height:260px;width:100%"></canvas>
+        </div>
+        <div>
+          <div style="text-align:center;font-weight:700;margin-bottom:6px">Top-performing student</div>
+          <canvas id="topChart" style="height:260px;width:100%"></canvas>
+        </div>
+        <div>
+          <div style="text-align:center;font-weight:700;margin-bottom:6px">Students needing review</div>
+          <canvas id="needChart" style="height:260px;width:100%"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getFirestore, collection, query, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    // Chart.js loaded from CDN
+    import "https://cdn.jsdelivr.net/npm/chart.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyADVdmyzhrewkr2-AjV15NwdAqrfhw2TaY",
+      authDomain: "imathgination-7e610.firebaseapp.com",
+      projectId: "imathgination-7e610",
+      storageBucket: "imathgination-7e610.appspot.com",
+      messagingSenderId: "591589679937",
+      appId: "1:591589679937:web:5298f062812021e64c77c0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const topics = {
+      timelessVillage: "Time and World Zones (Timeless Village)",
+      gmdasOperations: "GMDAS Operations (Operation Forest)",
+      multiplyingFractions: "Multiplying Fractions (Fraction River)",
+      areaOfShapes: "Area of Shapes (Tri Trap Par Cave)",
+      infinityTower: "Ultimate Math Challenge (Infinity Tower)"
+    };
+
+    // Defensive normalizeText used across analytics (removes punctuation/diacritics, collapses whitespace, lowercases).
+    function normalizeText(str) {
+      if (str === null || str === undefined) return '';
+      try {
+        const s = String(str).normalize('NFKD');
+        // remove diacritics and non-letter/number/space chars, collapse spaces
+        return s.replace(/\p{Diacritic}/gu, '').replace(/[^\p{L}\p{N}\s]/gu, '').replace(/\s+/g, ' ').trim().toLowerCase();
+      } catch (e) {
+        // fallback for older runtimes without Unicode property escapes
+        return String(str).replace(/[^A-Za-z0-9\s]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+      }
+    }
+
+    // teacher section (null => show all)
+    window._teacherSection = null;
+    async function determineTeacherSection() {
+      try {
+        const sessionRaw = localStorage.getItem('session');
+        if (sessionRaw) {
+          const s = JSON.parse(sessionRaw);
+          if (s && s.role === 'teacher' && s.section) {
+            window._teacherSection = s.section;
+            return;
+          }
+          if (s && s.role === 'teacher' && s.number) {
+            try {
+              const tq = query(collection(db, 'users'), where('number', '==', s.number));
+              const tSnap = await getDocs(tq);
+              if (!tSnap.empty) {
+                const tdata = tSnap.docs[0].data();
+                if (tdata && tdata.section) window._teacherSection = tdata.section;
+              }
+            } catch (e) { console.warn('teacher lookup failed', e); }
+          }
+        }
+      } catch (e) { /* ignore parse errors */ }
+    }
+
+    let allUsers = [];
+
+    // compute total points earned / possible from assessmentAnswers and progress entries
+    function computeUserPoints(user) {
+      let earned = 0;
+      let possible = 0;
+
+      // Helper to normalize/get student answer string
+      const getStudentAnswer = (entry) => {
+        if (!entry) return '';
+        return (entry.answer !== undefined) ? String(entry.answer).trim()
+          : ((entry.studentAnswer !== undefined) ? String(entry.studentAnswer).trim() : '');
+      };
+
+      // 1) assessmentAnswers map (preferred for canonical question defs)
+      const assessmentAnswers = user.assessmentAnswers || {};
+      for (const aid of Object.keys(assessmentAnswers || {})) {
+        const amap = assessmentAnswers[aid] || {};
+        const aDef = (window._assessmentMap && window._assessmentMap[aid]) || null;
+        for (const k of Object.keys(amap)) {
+          const entry = amap[k] || {};
+          // determine index if available
+          const idx = (entry.index !== undefined && entry.index !== null) ? Number(entry.index) : (/\d+/.exec(k) ? Number(/\d+/.exec(k)[0]) : null);
+          // question definition from assessment doc if present
+          const qDef = (aDef && Array.isArray(aDef.questions) && idx !== null && aDef.questions[idx]) ? aDef.questions[idx] : null;
+          // points: prefer qDef.points, then entry.points, else default 1
+          const pts = Number((qDef && qDef.points) || entry.points || 1) || 1;
+          possible += pts;
+
+          const studentAns = getStudentAnswer(entry);
+          // canonical correct: prefer entry.correctAnswer then qDef.answer/correctAnswer
+          const correct = (entry.correctAnswer !== undefined && entry.correctAnswer !== null) ? String(entry.correctAnswer).trim()
+            : ((qDef && (qDef.answer || qDef.correctAnswer)) ? String(qDef.answer || qDef.correctAnswer).trim() : '');
+
+          if (correct) {
+            if (normalizeText(studentAns) === normalizeText(correct)) {
+              earned += pts;
+            }
+          } else {
+            // if entry explicitly marked correct/incorrect
+            if (entry.correct === true || entry.correct === 1) earned += pts;
+            // if explicit false -> no points
+          }
+        }
+      }
+
+      // 2) fallback: progress-style entries (if they include points and correct info)
+      const progressEntries = Array.isArray(user.progress) ? user.progress : Object.values(user.progress || {});
+      for (const p of progressEntries) {
+        if (!p) continue;
+        const qList = Array.isArray(p.questions) ? p.questions : (Array.isArray(p.answers) ? p.answers : (Array.isArray(p.responses) ? p.responses : []));
+        for (const q of qList) {
+          if (!q) continue;
+          const pts = Number(q.points || 1) || 1;
+          // skip entries already accounted for via assessmentAnswers (no reliable key to dedupe here)
+          possible += pts;
+          const studentAns = getStudentAnswer(q);
+          const correct = (q.correctAnswer !== undefined && q.correctAnswer !== null) ? String(q.correctAnswer).trim()
+            : ((q.correct !== undefined && typeof q.correct === 'string') ? String(q.correct).trim() : '');
+          if (correct) {
+            if (normalizeText(studentAns) === normalizeText(correct)) earned += pts;
+          } else if (q.correct === true || q.correct === 1) {
+            earned += pts;
+          }
+        }
+      }
+
+      return { earned, possible };
+    }
+
+    // compute percentage average per user based on points (0-100) when possible
+    function computeUserAverage(user) {
+      // prefer assessment-based points
+      const pts = computeUserPoints(user);
+      if (pts && Number.isFinite(pts.possible) && pts.possible > 0) {
+        return Math.round((pts.earned / pts.possible) * 100);
+      }
+      // legacy fallback: use per-progress numeric scores if present
+      const progress = user.progress || {};
+      const scores = Object.values(progress).map(p => p.score).filter(s => typeof s === 'number');
+      if (scores.length) return Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+      if (user.assessmentScores && typeof user.assessmentScores === 'object') {
+        const as = Object.values(user.assessmentScores).map(v => Number(v)).filter(v => Number.isFinite(v));
+        if (as.length) return Math.round(as.reduce((a,b) => a+b,0)/as.length);
+      }
+      if (user.lastAssessmentScore !== undefined) {
+        const n = Number(user.lastAssessmentScore);
+        if (Number.isFinite(n)) return Math.round(n);
+      }
+      return 'N/A';
+    }
+
+    // update average per section to use percentage averages
+    function computeAveragePerSection() {
+      const sections = {};
+      allUsers.forEach(u => {
+        if (u.active === false) return;
+        const sec = u.section || 'Unknown';
+        const avg = computeUserAverage(u);
+        if (!sections[sec]) sections[sec] = { total:0, count:0 };
+        if (typeof avg === 'number') { sections[sec].total += avg; sections[sec].count++; }
+      });
+      const out = Object.entries(sections).map(([sec,v]) => `${sec}: ${v.count ? Math.round(v.total/v.count) : 'N/A'}%`);
+      document.getElementById('avgPerSection').textContent = out.join('\n');
+    }
+
+    // Display overall average percentage across scoped students (no names)
+    function computeTopStudent() {
+      const vals = allUsers.filter(u => u.active !== false).map(computeUserAverage).filter(v => typeof v === 'number');
+      if (!vals.length) {
+        document.getElementById('topStudent').textContent = 'N/A';
+        return;
+      }
+      const avgAll = Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+      document.getElementById('topStudent').textContent = `${avgAll}%`;
+      // expose for charts
+      window._overallAvgPercent = avgAll;
+    }
+
+    // Count wrong responses for a user by comparing student answers to any known correctAnswer/correct fields
+function getWrongCount(user) {
+	// defensive: handle missing user
+	if (!user) return 0;
+	let wrong = 0;
+
+	const normalize = typeof normalizeText === 'function' ? normalizeText : (s=>String(s||'').toLowerCase().trim());
+
+	// helper to read student answer from multiple shapes
+	const studentAnswerFor = (entry) => {
+		if (!entry) return '';
+		if (entry.answer !== undefined && entry.answer !== null) return String(entry.answer).trim();
+		if (entry.studentAnswer !== undefined && entry.studentAnswer !== null) return String(entry.studentAnswer).trim();
+		return '';
+	};
+
+	// 1) progress-style entries
+	try {
+		const progressEntries = Array.isArray(user.progress) ? user.progress : Object.values(user.progress || {});
+		for (const p of progressEntries) {
+			if (!p) continue;
+			const qList = Array.isArray(p.questions) ? p.questions : (Array.isArray(p.answers) ? p.answers : (Array.isArray(p.responses) ? p.responses : []));
+			for (const q of qList) {
+				if (!q) continue;
+				const sAns = studentAnswerFor(q);
+				if (!sAns) continue;
+				// prefer explicit correctAnswer/correct fields on the entry
+				let correct = (q.correctAnswer !== undefined && q.correctAnswer !== null) ? String(q.correctAnswer).trim() : '';
+				if (!correct && (q.correct === true || q.correct === 1)) {
+					correct = String(q.correct).trim();
+				}
+				if (correct) {
+					if (normalize(sAns) !== normalize(correct)) wrong++;
+				} else if (q.correct === false || q.correct === 0) {
+					wrong++;
+				}
+			}
+		}
+	} catch (e) { console.warn('getWrongCount: progress scan failed', e); }
+
+	// 2) assessmentAnswers map
+	try {
+		const assessmentAnswers = user.assessmentAnswers || {};
+		for (const aid of Object.keys(assessmentAnswers || {})) {
+			const amap = assessmentAnswers[aid] || {};
+			// try to load assessment doc from map if available
+			const aDef = (window._assessmentMap && window._assessmentMap[aid]) ? window._assessmentMap[aid] : null;
+			for (const key of Object.keys(amap)) {
+				const entry = amap[key] || {};
+				const sAns = studentAnswerFor(entry);
+				if (!sAns) continue;
+
+				// prefer explicit entry correctAnswer
+				let correct = (entry.correctAnswer !== undefined && entry.correctAnswer !== null) ? String(entry.correctAnswer).trim() : '';
+				// fallback to assessment canonical if index available
+				if (!correct) {
+					const idx = (entry.index !== undefined && entry.index !== null) ? Number(entry.index) : (/\d+/.exec(key) ? Number(/\d+/.exec(key)[0]) : null);
+					if (aDef && idx !== null && Array.isArray(aDef.questions) && aDef.questions[idx]) {
+						correct = String(aDef.questions[idx].answer || aDef.questions[idx].correctAnswer || '').trim();
+					}
+				}
+				if (correct) {
+					if (normalize(sAns) !== normalize(correct)) wrong++;
+				} else if (entry.correct === false || entry.correct === 0) {
+					wrong++;
+				}
+			}
+		}
+	} catch (e) { console.warn('getWrongCount: assessmentAnswers scan failed', e); }
+
+	return wrong;
+}
+
+    // Build wrong-answer stats from loaded assessments + in-memory allUsers (teacher-scoped).
+	// Returns { totalStudents, wrongStudents, overallPercent, bySection: { [section]: { total, wrong, percent } } }
+	function buildWrongStatsFromUsers() {
+		const aMap = window._assessmentMap || {};
+		// build indexes like most_missed: questionIdIndex and questionTextIndex
+		const questionTextIndex = {}; // normalized text -> { correctAnswer, assessmentId, idx }
+		const questionIdIndex = {};   // explicit id -> { correctAnswer, assessmentId, idx }
+
+		Object.keys(aMap).forEach(aid => {
+			const a = aMap[aid] || {};
+			const qs = Array.isArray(a.questions) ? a.questions : [];
+			qs.forEach((qObj, idx) => {
+				const qText = String(qObj.question || qObj.prompt || qObj.text || '').trim();
+				const norm = qText ? normalizeText(qText) : '';
+				const raw = { correctAnswer: String(qObj.answer || qObj.correctAnswer || '').trim(), assessmentId: aid, idx };
+				if (norm) {
+					questionTextIndex[norm] = questionTextIndex[norm] || [];
+					questionTextIndex[norm].push(raw);
+				}
+				const qid = qObj.id || qObj.questionId || qObj.qid || null;
+				if (qid) {
+					questionIdIndex[qid] = questionIdIndex[qid] || [];
+					questionIdIndex[qid].push(raw);
+				}
+			});
+		});
+
+		const sectionTotals = {}; // section -> { total, wrong }
+		let totalStudents = 0;
+		let wrongStudents = 0;
+
+		for (const u of (allUsers || [])) {
+			if (!u || u.active === false) continue;
+			totalStudents++;
+			const sec = u.section || 'Unknown';
+			sectionTotals[sec] = sectionTotals[sec] || { total: 0, wrong: 0 };
+			sectionTotals[sec].total++;
+
+			let userWrong = 0;
+
+			// assessmentAnswers map
+			try {
+				const amap = u.assessmentAnswers || {};
+				for (const aid of Object.keys(amap || {})) {
+					const qmap = amap[aid] || {};
+					for (const qk of Object.keys(qmap)) {
+						const entry = qmap[qk] || {};
+						const studentAns = entry.answer !== undefined ? String(entry.answer).trim() : (entry.studentAnswer !== undefined ? String(entry.studentAnswer).trim() : '');
+						if (!studentAns) continue;
+						// prefer entry.correctAnswer, else lookup assessment canonical by index
+						let correct = (entry.correctAnswer !== undefined && entry.correctAnswer !== null) ? String(entry.correctAnswer).trim() : '';
+						if (!correct) {
+							const idx = (entry.index !== undefined && entry.index !== null) ? Number(entry.index) : (/\d+/.exec(qk) ? Number(/\d+/.exec(qk)[0]) : null);
+							const aDef = aMap[aid];
+							if (aDef && idx !== null && Array.isArray(aDef.questions) && aDef.questions[idx]) {
+								correct = String(aDef.questions[idx].answer || aDef.questions[idx].correctAnswer || '').trim();
+							}
+						}
+						// If we have a canonical correct value, compare; otherwise treat a filled student answer
+						// as a "wrong" response for the purposes of aggregated "most missed" / review lists,
+						// unless the entry is explicitly marked correct.
+						if (correct) {
+							if (normalizeText(studentAns) !== normalizeText(correct)) userWrong++;
+						} else {
+							// entry.correct === true -> explicitly correct -> don't count
+							if (!(entry.correct === true || entry.correct === 1)) {
+								// no canonical correct and not explicitly correct -> count as wrong
+								userWrong++;
+							}
+						}
+					}
+				}
+			} catch (e) { console.warn('buildWrongStats: assessmentAnswers scan failed', e); }
+
+			// progress-style entries
+			try {
+				const progressEntries = Array.isArray(u.progress) ? u.progress : Object.values(u.progress || {});
+				for (const p of progressEntries) {
+					if (!p) continue;
+					const qList = Array.isArray(p.questions) ? p.questions : (Array.isArray(p.answers) ? p.answers : (Array.isArray(p.responses) ? p.responses : []));
+					for (const q of qList) {
+						if (!q) continue;
+						const studentAns = (q.studentAnswer !== undefined) ? String(q.studentAnswer).trim() : ((q.answer !== undefined) ? String(q.answer).trim() : '');
+						if (!studentAns) continue;
+						// attempt to match by explicit id first
+						const qid = q.id || q.questionId || q.qid || null;
+						let matched = false;
+						if (qid && questionIdIndex[qid] && questionIdIndex[qid].length) {
+							for (const cand of questionIdIndex[qid]) {
+								if (cand.correctAnswer) {
+									if (normalizeText(studentAns) !== normalizeText(cand.correctAnswer)) userWrong++, matched = true;
+									else matched = true;
+								}
+							}
+						}
+						if (matched) continue;
+						// match by normalized text
+						const qText = q.question || q.prompt || q.text || '';
+						const norm = normalizeText(qText || '');
+						if (norm && questionTextIndex[norm] && questionTextIndex[norm].length) {
+							for (const cand of questionTextIndex[norm]) {
+								if (cand.correctAnswer) {
+									if (normalizeText(studentAns) !== normalizeText(cand.correctAnswer)) userWrong++;
+									matched = true;
+									break;
+								}
+							}
+							if (matched) continue;
+						}
+						// fallback: if entry has explicit correct flag true -> treat as correct (skip),
+						// otherwise (student answered but no canonical match) count as wrong.
+						if (!(q.correct === true || q.correct === 1)) {
+							userWrong++;
+						}
+					}
+				}
+			} catch (e) { console.warn('buildWrongStats: progress scan failed', e); }
+
+			if (userWrong > 0) {
+				wrongStudents++;
+				sectionTotals[sec].wrong++;
+			}
+		}
+
+		// compute percents
+		const bySection = {};
+		for (const [s, v] of Object.entries(sectionTotals)) {
+			bySection[s] = { total: v.total, wrong: v.wrong, percent: v.total ? Math.round((v.wrong / v.total) * 100) : 0 };
+		}
+		const overallPercent = totalStudents ? Math.round((wrongStudents / totalStudents) * 100) : 0;
+		// Diagnostics: log aggregated stats for verification/debugging
+		try {
+			console.log('buildWrongStatsFromUsers -> totalStudents:', totalStudents, 'wrongStudents:', wrongStudents, 'bySection sample:', Object.entries(bySection).slice(0,10));
+		} catch (e) { /* ignore logging errors */ }
+		return { totalStudents, wrongStudents, overallPercent, bySection };
+	}
+
+	// computeStudentsNeedingReview: show only overall percent (no student names)
+	function computeStudentsNeedingReview(threshold=50) {
+		// rebuild stats from current in-memory users + loaded assessments
+		const stats = buildWrongStatsFromUsers();
+		const overallSummary = `Overall: ${stats.overallPercent}% of students have at least one wrong response.`;
+		document.getElementById('needReview').innerHTML = `<div style="font-weight:700">${overallSummary}</div>`;
+		// cache for charts
+		window._wrongStatsCache = stats;
+	}
+
+	// Compute overall percent of students (in allUsers) who have at least one wrong response
+	function computeOverallWrongPercent() {
+		if (window._wrongStatsCache && typeof window._wrongStatsCache.overallPercent === 'number') return window._wrongStatsCache.overallPercent;
+		const stats = buildWrongStatsFromUsers();
+		window._wrongStatsCache = stats;
+		return stats.overallPercent;
+	}
+
+    async function updateCharts() {
+      // Simple bar charts using Chart.js if available
+      try {
+        const Chart = window.Chart;
+        const secNames = Array.from(new Set(allUsers.map(u=>u.section||'Unknown'))).sort();
+        const secAvgs = secNames.map(name => {
+          const users = allUsers.filter(u => (u.section||'Unknown')===name);
+          const vals = users.map(computeUserAverage).filter(v=>typeof v==='number');
+          if (!vals.length) return 0; return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+        });
+
+        // avgChart (unchanged)
+        const avgCtx = document.getElementById('avgChart').getContext('2d');
+        if (window._avgChart) window._avgChart.destroy();
+        window._avgChart = new Chart(avgCtx, { type: 'bar', data: { labels: secNames, datasets: [{ label: 'Average', data: secAvgs, backgroundColor: '#8fb26b' }] }, options: { responsive:true, plugins:{legend:{display:false}} } });
+
+        // topChart - overall average percent across scoped students (no names)
+        let overall;
+        if (typeof window._overallAvgPercent === 'number') {
+          overall = window._overallAvgPercent;
+        } else {
+          const vals = allUsers.filter(u => u.active !== false).map(computeUserAverage).filter(v => typeof v === 'number');
+          overall = vals.length ? Math.round(vals.reduce((a,b) => a + b, 0) / vals.length) : 0;
+        }
+        const topCtx = document.getElementById('topChart').getContext('2d');
+        if (window._topChart) window._topChart.destroy();
+        window._topChart = new Chart(topCtx, {
+          type: 'doughnut',
+          data: { labels:[`Overall Avg`], datasets:[{ data:[overall, 100-overall], backgroundColor:['#e6c5ff','#ddd'] }] },
+          options:{ responsive:true, plugins:{legend:{display:false}} }
+        });
+
+        // needChart - use the same aggregation as most_missed for percent-per-section
+        const stats = window._wrongStatsCache || buildWrongStatsFromUsers();
+        const needPercents = secNames.map(n => (stats && stats.bySection && stats.bySection[n] && typeof stats.bySection[n].percent === 'number') ? stats.bySection[n].percent : 0);
+
+        const needCtx = document.getElementById('needChart').getContext('2d');
+        if (window._needChart) window._needChart.destroy();
+        window._needChart = new Chart(needCtx, {
+          type:'bar',
+          data:{ labels:secNames, datasets:[{ label:'% students with wrong answers', data:needPercents, backgroundColor:'#e07a66' }] },
+          options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true, max:100 } } }
+        });
+
+      } catch (e) {
+        console.warn('updateCharts failed', e);
+      }
+    }
+
+    function listenToStudents() {
+      const q = query(collection(db, 'users'), where('role','==','student'));
+      onSnapshot(q, snap => {
+        // map docs then filter to teacher section if set
+        let users = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+        if (window._teacherSection) users = users.filter(u => (u.section || '') === window._teacherSection);
+        allUsers = users;
+         computeAveragePerSection();
+         computeTopStudent();
+         computeStudentsNeedingReview();
+         updateCharts();
+       });
+     }
+
+    document.getElementById('backToReports').addEventListener('click', () => window.location.href = 'data_reports.html');
+    // debug button removed — no listener required
+
+    // Load all assessments into a map so helpers can use canonical question answers/points
+    async function loadAssessmentsMap() {
+      try {
+        const snap = await getDocs(collection(db, 'assessments'));
+        window._assessmentMap = {};
+        snap.docs.forEach(d => { window._assessmentMap[d.id] = d.data() || {}; });
+        console.log('Loaded assessments for analytics:', Object.keys(window._assessmentMap).length);
+      } catch (e) {
+        console.warn('Failed to load assessments map', e);
+        window._assessmentMap = {};
+      }
+    }
+
+    // init: determine teacher section then start listening
+    (async function initAnalytics() {
+      await determineTeacherSection();
+      await loadAssessmentsMap();          // ensure assessment canonical answers available
+      listenToStudents();
+    })();
+      
+   </script>
+</body>
+</html>
